@@ -19,7 +19,7 @@ const IntelligentHydrationRemindersInputSchema = z.object({
   ),
   dailyGoalMl: z.number().describe("The user's daily water intake goal in milliliters, e.g., 2000."),
   averageIntakeMl: z.number().describe("The user's average daily water intake in milliliters, e.g., 1500."),
-  existingReminders: z.array(z.string()).optional().describe("An optional array of existing reminder times, e.g., ['09:00 AM', '01:00 PM']. The AI should avoid suggesting these if they are already optimal."),
+  existingReminders: z.array(z.string()).optional().describe("An optional array of existing reminder times, e.g., ['09:00 AM', '01:00 PM']."),
 });
 export type IntelligentHydrationRemindersInput = z.infer<typeof IntelligentHydrationRemindersInputSchema>;
 
@@ -47,18 +47,14 @@ Here is the user's information:
 - Daily Water Intake Goal: {{{dailyGoalMl}}}ml
 - Average Daily Water Intake: {{{averageIntakeMl}}}ml
 {{#if existingReminders}}
-- Existing Reminder Times to consider: {{{JSON.stringify existingReminders}}}
+- Existing Reminder Times: {{#each existingReminders}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
 {{/if}}
 
 Based on this information, suggest a set of optimal hydration reminder times between the user's wake-up and sleep times.
 Consider spreading the reminders appropriately throughout their waking hours, taking into account their activity pattern to avoid interruptions during peak activity or sleep.
 Aim for a reasonable number of reminders (e.g., 6-8 for an adult aiming for 2-3 liters) to help them gradually reach their daily goal.
-Also, provide a brief explanation for your choices.
-
-Return the response as a JSON object matching the following schema:
-${JSON.stringify(IntelligentHydrationRemindersOutputSchema.jsonSchema(), null, 2)}`,
+Also, provide a brief explanation for your choices.`,
 });
-
 
 const intelligentHydrationRemindersFlow = ai.defineFlow(
   {
