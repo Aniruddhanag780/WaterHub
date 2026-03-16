@@ -133,7 +133,7 @@ export default function LoginPage() {
           <h1 className="text-3xl font-bold tracking-tight text-black">
             {isSignUp ? "Create Account" : "Welcome Back!"}
           </h1>
-          <p className="text-muted-foreground text-sm px-4">
+          <p className="text-muted-foreground text-sm px-4 font-medium">
             {isSignUp 
               ? "Join HydroTrack to start your intelligent hydration journey." 
               : "Please enter your email below to sign in to your account."}
@@ -166,7 +166,7 @@ export default function LoginPage() {
             />
             {!isSignUp && (
               <div className="flex justify-end">
-                <Button variant="link" className="text-xs font-bold text-black p-0 h-auto hover:underline">
+                <Button variant="link" className="text-sm font-medium text-muted-foreground p-0 h-auto hover:text-black hover:underline transition-colors">
                   Forgot password?
                 </Button>
               </div>
