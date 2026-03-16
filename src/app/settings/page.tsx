@@ -1,22 +1,46 @@
+
 "use client"
 
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Target, UserCircle, Droplets, ShieldCheck, Cloud, Check, AlertCircle } from "lucide-react"
+import { Target, UserCircle, Droplets, ShieldCheck, Cloud, Check, AlertCircle, RefreshCw, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/firebase"
+import { signInWithGoogleForDrive } from "@/firebase/non-blocking-login"
 
 export default function SettingsPage() {
-  const { goal, setDailyGoal } = useHydration()
+  const { goal, setDailyGoal, syncLogsToDrive } = useHydration()
+  const auth = useAuth()
   const [isDriveConnected, setIsDriveConnected] = useState(false)
+  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
 
-  const handleConnectDrive = () => {
-    // In a production app, this would initiate OAuth2 flow with Drive scopes.
-    // For the prototype, we simulate the connection state.
-    setIsDriveConnected(true)
+  const handleConnectDrive = async () => {
+    setIsConnecting(true)
+    try {
+      const token = await signInWithGoogleForDrive(auth)
+      if (token) {
+        setAccessToken(token)
+        setIsDriveConnected(true)
+      }
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
+  const handleSyncNow = async () => {
+    if (!accessToken) return
+    setIsSyncing(true)
+    try {
+      await syncLogsToDrive(accessToken)
+    } finally {
+      setIsSyncing(false)
+    }
   }
 
   return (
@@ -70,17 +94,17 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <h4 className="font-bold text-lg text-white">HydroTrack Explorer</h4>
-                  <p className="text-sm text-muted-foreground font-medium flex items-center gap-1">
+                  <div className="text-sm text-muted-foreground font-medium flex items-center gap-1">
                     {isDriveConnected ? (
-                      <>
-                        <ShieldCheck className="w-3 h-3 text-emerald-400" /> Cloud Sync Active
-                      </>
+                      <span className="flex items-center gap-1 text-emerald-400">
+                        <ShieldCheck className="w-3 h-3" /> Cloud Sync Active
+                      </span>
                     ) : (
-                      <>
-                        <AlertCircle className="w-3 h-3 text-orange-400" /> Connect Google Drive for cloud sync
-                      </>
+                      <span className="flex items-center gap-1 text-orange-400">
+                        <AlertCircle className="w-3 h-3" /> Connect Google Drive for cloud sync
+                      </span>
                     )}
-                  </p>
+                  </div>
                 </div>
               </div>
 
@@ -97,21 +121,38 @@ export default function SettingsPage() {
                         <p className="text-[10px] text-muted-foreground font-medium">Backup your hydration history</p>
                       </div>
                     </div>
-                    <Button 
-                      variant={isDriveConnected ? "ghost" : "outline"} 
-                      size="sm" 
-                      onClick={handleConnectDrive}
-                      className={cn(
-                        "rounded-lg border-white/10 h-8 px-4 font-bold text-xs",
-                        isDriveConnected ? "text-emerald-400 cursor-default hover:bg-transparent" : "hover:bg-primary hover:text-black hover:border-primary"
+                    <div className="flex gap-2">
+                      {isDriveConnected && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleSyncNow}
+                          disabled={isSyncing}
+                          className="rounded-lg border-white/10 h-8 px-4 font-bold text-xs bg-white/5 hover:bg-primary hover:text-black"
+                        >
+                          {isSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+                          Sync
+                        </Button>
                       )}
-                    >
-                      {isDriveConnected ? (
-                        <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>
-                      ) : (
-                        "Connect"
-                      )}
-                    </Button>
+                      <Button 
+                        variant={isDriveConnected ? "ghost" : "outline"} 
+                        size="sm" 
+                        onClick={handleConnectDrive}
+                        disabled={isConnecting}
+                        className={cn(
+                          "rounded-lg border-white/10 h-8 px-4 font-bold text-xs",
+                          isDriveConnected ? "text-emerald-400 cursor-default hover:bg-transparent" : "hover:bg-primary hover:text-black hover:border-primary"
+                        )}
+                      >
+                        {isConnecting ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : isDriveConnected ? (
+                          <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>
+                        ) : (
+                          "Connect"
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

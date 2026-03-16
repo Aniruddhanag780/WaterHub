@@ -1,9 +1,12 @@
+
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from "react"
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase"
-import { collection, doc, query, where, serverTimestamp } from "firebase/firestore"
-import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates"
+import { collection, doc } from "firebase/firestore"
+import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates"
+import { GoogleDriveService } from "@/lib/google-drive"
+import { useToast } from "@/hooks/use-toast"
 
 export type WaterLog = {
   id: string
@@ -21,6 +24,7 @@ type HydrationContextType = {
   removeLog: (id: string) => void
   setDailyGoal: (amount: number) => void
   setReminders: (times: string[]) => void
+  syncLogsToDrive: (accessToken: string) => Promise<void>
   todayTotal: number
   streak: number
   history: Record<string, number>
@@ -29,8 +33,9 @@ type HydrationContextType = {
 const HydrationContext = createContext<HydrationContextType | undefined>(undefined)
 
 export function HydrationProvider({ children }: { children: React.ReactNode }) {
-  const { user, isUserLoading } = useUser()
+  const { user } = useUser()
   const db = useFirestore()
+  const { toast } = useToast()
 
   // Local State (Fallback/Guest mode)
   const [localLogs, setLocalLogs] = useState<WaterLog[]>([])
@@ -141,6 +146,29 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const syncLogsToDrive = async (accessToken: string) => {
+    try {
+      const backupData = {
+        userId: user?.uid || 'guest',
+        backupDate: new Date().toISOString(),
+        logs,
+        goal,
+        reminders
+      }
+      await GoogleDriveService.uploadBackup(accessToken, `hydrotrack_backup_${new Date().toISOString().split('T')[0]}.json`, backupData)
+      toast({
+        title: "Backup successful",
+        description: "Your hydration history has been saved to Google Drive.",
+      })
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Backup failed",
+        description: error.message || "Could not save to Google Drive.",
+      })
+    }
+  }
+
   const todayStr = new Date().toLocaleDateString()
   const todayTotal = logs
     .filter((log) => {
@@ -190,6 +218,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         removeLog,
         setDailyGoal,
         setReminders,
+        syncLogsToDrive,
         todayTotal,
         streak,
         history,
