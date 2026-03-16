@@ -93,7 +93,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-[#f4f4f5] border-none text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border border-black text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
           </div>
           <div className="space-y-1.5">
@@ -105,7 +105,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-[#f4f4f5] border-none text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border border-black text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
             {!isSignUp && (
               <div className="text-right">
