@@ -7,6 +7,7 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   OAuthProvider,
+  sendPasswordResetEmail,
 } from 'firebase/auth';
 
 /** 
@@ -31,6 +32,13 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
  */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string) {
   return signInWithEmailAndPassword(authInstance, email, password);
+}
+
+/**
+ * Initiate password reset email.
+ */
+export function initiatePasswordReset(authInstance: Auth, email: string) {
+  return sendPasswordResetEmail(authInstance, email);
 }
 
 /** 

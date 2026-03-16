@@ -7,7 +7,8 @@ import {
   initiateEmailSignUp, 
   initiateAnonymousSignIn,
   initiateGoogleSignIn,
-  initiateMicrosoftSignIn
+  initiateMicrosoftSignIn,
+  initiatePasswordReset
 } from "@/firebase/non-blocking-login"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -91,6 +92,36 @@ export default function LoginPage() {
     }
   }
 
+  const handleForgotPassword = () => {
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Missing Email",
+        description: "Please enter your email address first to reset your password.",
+      })
+      return
+    }
+
+    setLoading(true)
+    initiatePasswordReset(auth, email)
+      .then(() => {
+        toast({
+          title: "Reset Email Sent",
+          description: "Check your inbox for a link to reset your password.",
+        })
+      })
+      .catch((err: any) => {
+        toast({
+          variant: "destructive",
+          title: "Reset Error",
+          description: err.message,
+        })
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
+
   const handleGuestAttempt = () => {
     setPendingAction("guest")
     setShowWarning(true)
@@ -166,7 +197,12 @@ export default function LoginPage() {
             />
             {!isSignUp && (
               <div className="flex justify-end">
-                <Button variant="link" className="text-sm font-medium text-black p-0 h-auto hover:text-black/70 hover:underline transition-colors">
+                <Button 
+                  type="button"
+                  variant="link" 
+                  onClick={handleForgotPassword}
+                  className="text-sm font-medium text-black p-0 h-auto hover:text-black/70 hover:underline transition-colors"
+                >
                   Forgot password?
                 </Button>
               </div>
