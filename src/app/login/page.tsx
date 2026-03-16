@@ -93,7 +93,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-[#fffbeb] border-2 border-[#fef3c7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20 shadow-sm"
+              className="bg-[#f4f4f5] border-none text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
           </div>
           <div className="space-y-1.5">
@@ -105,7 +105,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-[#fffbeb] border-2 border-[#fef3c7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20 shadow-sm"
+              className="bg-[#f4f4f5] border-none text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
             {!isSignUp && (
               <div className="text-right">
@@ -137,7 +137,7 @@ export default function LoginPage() {
         <div className="grid grid-cols-3 gap-2 mb-8">
           <Button 
             variant="outline" 
-            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-all p-1" 
+            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
             onClick={() => {}} 
             disabled={loading}
           >
@@ -164,7 +164,7 @@ export default function LoginPage() {
           
           <Button 
             variant="outline" 
-            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-all p-1" 
+            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
             onClick={() => {}} 
             disabled={loading}
           >
@@ -179,7 +179,7 @@ export default function LoginPage() {
 
           <Button 
             variant="outline" 
-            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-all p-1" 
+            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
             onClick={handleGuest}
             disabled={loading}
           >
