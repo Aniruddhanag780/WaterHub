@@ -12,12 +12,22 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User } from "lucide-react"
+import { Loader2, User, AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function LoginPage() {
   const auth = useAuth()
@@ -28,6 +38,10 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  
+  // Warning Dialog State
+  const [showWarning, setShowWarning] = useState(false)
+  const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
 
   useEffect(() => {
     if (user) {
@@ -35,26 +49,51 @@ export default function LoginPage() {
     }
   }, [user, router])
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const executeAuth = async () => {
     setLoading(true)
     try {
-      if (isSignUp) {
+      if (pendingAction === "signup") {
         await initiateEmailSignUp(auth, email, password)
-      } else {
-        await initiateEmailSignIn(auth, email, password)
+      } else if (pendingAction === "guest") {
+        await initiateAnonymousSignIn(auth)
       }
     } catch (err: any) {
       toast({
         variant: "destructive",
         title: "Authentication Error",
         description: err.code === 'auth/operation-not-allowed' 
-          ? "Email/Password sign-in is not enabled in your Firebase Console. Please enable it to continue."
+          ? "This sign-in method is not enabled in your Firebase Console."
           : err.message,
       })
     } finally {
       setLoading(false)
+      setPendingAction(null)
     }
+  }
+
+  const handleAuthAttempt = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (isSignUp) {
+      setPendingAction("signup")
+      setShowWarning(true)
+    } else {
+      // Normal sign in - no warning needed
+      setLoading(true)
+      initiateEmailSignIn(auth, email, password)
+        .catch((err) => {
+          toast({
+            variant: "destructive",
+            title: "Sign In Error",
+            description: err.message,
+          })
+          setLoading(false)
+        })
+    }
+  }
+
+  const handleGuestAttempt = () => {
+    setPendingAction("guest")
+    setShowWarning(true)
   }
 
   const handleGoogleSignIn = async () => {
@@ -65,9 +104,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Authentication Error",
-        description: err.code === 'auth/operation-not-allowed' 
-          ? "Google sign-in is not enabled in your Firebase Console."
-          : err.message,
+        description: err.message,
       })
     } finally {
       setLoading(false)
@@ -82,26 +119,7 @@ export default function LoginPage() {
       toast({
         variant: "destructive",
         title: "Authentication Error",
-        description: err.code === 'auth/operation-not-allowed' 
-          ? "Microsoft sign-in is not enabled in your Firebase Console."
-          : err.message,
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGuest = async () => {
-    setLoading(true)
-    try {
-      await initiateAnonymousSignIn(auth)
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: err.code === 'auth/operation-not-allowed' 
-          ? "Anonymous sign-in is not enabled in your Firebase Console."
-          : err.message,
+        description: err.message,
       })
     } finally {
       setLoading(false)
@@ -122,7 +140,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-6">
+        <form onSubmit={handleAuthAttempt} className="space-y-6">
           <div className="space-y-1.5">
             <Label htmlFor="email" className="font-semibold text-sm">Email</Label>
             <Input 
@@ -132,7 +150,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-[#f4f4f5] border border-[#f4f4f5] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border border-[#e4e4e7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
           </div>
           <div className="space-y-1.5">
@@ -144,7 +162,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-[#f4f4f5] border border-[#f4f4f5] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border border-[#e4e4e7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
             {!isSignUp && (
               <div className="flex justify-end">
@@ -176,34 +194,22 @@ export default function LoginPage() {
         <div className="grid grid-cols-3 gap-2 mb-8">
           <Button 
             variant="outline" 
-            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
+            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
             onClick={handleGoogleSignIn} 
             disabled={loading}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
-              <path
-                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                fill="#4285F4"
-              />
-              <path
-                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                fill="#34A853"
-              />
-              <path
-                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                fill="#FBBC05"
-              />
-              <path
-                d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                fill="#EA4335"
-              />
+              <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+              <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+              <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/>
+              <path d="M12 5.38c1.62 0 3.06.56 4.21 1.66l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
             Google
           </Button>
           
           <Button 
             variant="outline" 
-            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
+            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
             onClick={handleMicrosoftSignIn} 
             disabled={loading}
           >
@@ -218,8 +224,8 @@ export default function LoginPage() {
 
           <Button 
             variant="outline" 
-            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
-            onClick={handleGuest}
+            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
+            onClick={handleGuestAttempt}
             disabled={loading}
           >
             <User className="w-4 h-4" />
@@ -243,6 +249,38 @@ export default function LoginPage() {
           </p>
         </div>
       </div>
+
+      {/* Data Retention Warning Dialog */}
+      <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent className="bg-white rounded-3xl border-none shadow-2xl max-w-[90vw] w-[400px]">
+          <AlertDialogHeader className="items-center text-center space-y-4">
+            <div className="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center">
+              <AlertTriangle className="w-8 h-8 text-amber-500" />
+            </div>
+            <AlertDialogTitle className="text-2xl font-bold text-slate-900">Data Retention Notice</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 text-base">
+              You are about to use a temporary session. Please note that all hydration data and history will be <strong>deleted after 30 days</strong> of inactivity.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-col gap-3 mt-6">
+            <AlertDialogAction 
+              onClick={executeAuth}
+              className="w-full h-12 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-semibold"
+            >
+              I understand, proceed
+            </AlertDialogAction>
+            <AlertDialogCancel 
+              className="w-full h-12 rounded-xl border-slate-200 text-slate-900 font-semibold hover:bg-slate-50"
+              onClick={() => {
+                setShowWarning(false)
+                setPendingAction(null)
+              }}
+            >
+              Sign in with another account
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
