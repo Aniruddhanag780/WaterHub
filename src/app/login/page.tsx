@@ -69,13 +69,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[90vh] px-4">
-      <div className="w-full max-w-md bg-white rounded-[2rem] p-8 shadow-2xl text-black border border-slate-100">
-        <div className="text-center mb-10 space-y-3">
-          <h1 className="text-4xl font-bold tracking-tight text-slate-900">
+    <div className="flex flex-col items-center justify-center min-h-[90vh] px-4 py-10">
+      <div className="w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-2xl text-black border border-slate-100">
+        <div className="text-center mb-10 space-y-4">
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
             {isSignUp ? "Join Us!" : "Welcome Back!"}
           </h1>
-          <p className="text-slate-500 text-lg leading-tight max-w-[300px] mx-auto">
+          <p className="text-slate-500 text-lg leading-snug max-w-[280px] mx-auto font-medium">
             {isSignUp 
               ? "Start your hydration journey with us today." 
               : "Please enter your email below to sign in to your account."}
@@ -92,7 +92,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-slate-50 border border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:border-slate-400 transition-colors"
+              className="bg-slate-100/50 border border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:bg-slate-100 transition-all border-none shadow-sm"
             />
           </div>
           <div className="space-y-3">
@@ -104,11 +104,11 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-slate-50 border border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:border-slate-400 transition-colors"
+              className="bg-slate-100/50 border border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:bg-slate-100 transition-all border-none shadow-sm"
             />
             {!isSignUp && (
               <div className="text-right">
-                <Button variant="link" className="text-sm font-bold text-slate-900 p-0 h-auto">
+                <Button variant="link" className="text-sm font-bold text-slate-900 p-0 h-auto hover:no-underline">
                   Forgot your password?
                 </Button>
               </div>
@@ -128,8 +128,8 @@ export default function LoginPage() {
           <div className="absolute inset-0 flex items-center">
             <span className="w-full border-t border-slate-200"></span>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-4 text-slate-400 font-bold tracking-widest">OR CONTINUE WITH</span>
+          <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-slate-400">
+            <span className="bg-white px-4">OR CONTINUE WITH</span>
           </div>
         </div>
 
@@ -147,13 +147,13 @@ export default function LoginPage() {
             Microsoft
           </Button>
           <Button variant="outline" className="h-14 border-slate-200 rounded-2xl bg-white hover:bg-slate-50 transition-all flex items-center justify-center gap-2 px-0 text-sm font-bold" onClick={handleGuest}>
-            <Phone className="w-5 h-5 text-slate-700" />
+            <Phone className="w-4 h-4 text-slate-700" />
             Phone
           </Button>
         </div>
 
         <div className="text-center space-y-6">
-          <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-[280px] mx-auto">
+          <p className="text-[13px] text-slate-500 font-medium leading-relaxed max-w-[320px] mx-auto">
             By continuing, you agree to our{" "}
             <Link href="#" className="underline font-bold text-slate-900">Terms of Service</Link>
             {" "}and{" "}
@@ -164,7 +164,7 @@ export default function LoginPage() {
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <Button 
               variant="link" 
-              className="text-slate-900 font-bold p-0 h-auto text-base" 
+              className="text-slate-900 font-bold p-0 h-auto text-base hover:no-underline" 
               onClick={() => setIsSignUp(!isSignUp)}
             >
               {isSignUp ? "Sign in" : "Sign up"}
