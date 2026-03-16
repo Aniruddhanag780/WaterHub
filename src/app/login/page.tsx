@@ -132,7 +132,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-[#f4f4f5] border-none text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border border-[#f4f4f5] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
           </div>
           <div className="space-y-1.5">
@@ -151,7 +151,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-[#f4f4f5] border-none text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border border-[#f4f4f5] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
           </div>
           
@@ -231,7 +231,7 @@ export default function LoginPage() {
           <p className="text-xs text-muted-foreground leading-relaxed px-2">
             By continuing, you agree to our <Link href="#" className="underline font-medium text-black">Terms of Service</Link> and <Link href="#" className="underline font-medium text-black">Privacy Policy</Link>.
           </p>
-          <p className="text-sm font-medium">
+          <p className="text-sm text-muted-foreground font-medium">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <Button 
               variant="link" 
