@@ -7,7 +7,7 @@ import { initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn } fro
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, Mail, Lock, User, ShieldCheck } from "lucide-react"
+import { Loader2, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useEffect } from "react"
@@ -71,7 +71,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[90vh] px-4 py-10 bg-[#09090b]">
-      <div className="w-full max-w-[400px] bg-white rounded-[2rem] p-8 shadow-2xl text-black">
+      <div className="w-full max-w-[400px] bg-white rounded-[2rem] p-8 shadow-2xl text-black border border-black/10">
         <div className="text-center mb-8 space-y-2">
           <h1 className="text-3xl font-bold tracking-tight text-black">
             {isSignUp ? "Create Account" : "Welcome Back!"}
@@ -93,7 +93,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-[#f4f4f5] border border-black text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border-2 border-black text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
           </div>
           <div className="space-y-1.5">
@@ -105,7 +105,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-[#f4f4f5] border border-black text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border-2 border-black text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
             {!isSignUp && (
               <div className="text-right">
@@ -134,11 +134,11 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-8">
+        <div className="grid grid-cols-3 gap-2 mb-8">
           <Button 
             variant="outline" 
-            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-sm font-medium transition-all" 
-            onClick={() => {}} // Placeholder for future Google logic if needed beyond Firebase popup
+            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-all p-1" 
+            onClick={() => {}} 
             disabled={loading}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -161,9 +161,25 @@ export default function LoginPage() {
             </svg>
             Google
           </Button>
+          
           <Button 
             variant="outline" 
-            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-sm font-medium transition-all" 
+            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-all p-1" 
+            onClick={() => {}} 
+            disabled={loading}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#f35325" d="M1 1h10v10H1z"/>
+              <path fill="#81bc06" d="M12 1h10v10H12z"/>
+              <path fill="#05a6f0" d="M1 12h10v10H1z"/>
+              <path fill="#ffba08" d="M12 12h10v10H12z"/>
+            </svg>
+            Microsoft
+          </Button>
+
+          <Button 
+            variant="outline" 
+            className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex flex-col items-center justify-center gap-1 text-[10px] font-bold transition-all p-1" 
             onClick={handleGuest}
             disabled={loading}
           >
