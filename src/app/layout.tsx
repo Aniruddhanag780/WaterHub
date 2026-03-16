@@ -2,6 +2,8 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { HydrationProvider } from '@/lib/store';
 import { Navigation } from '@/components/Navigation';
+import { FirebaseClientProvider } from '@/firebase/client-provider';
+import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
   title: 'HydroTrack - Smart Hydration Tracker',
@@ -21,14 +23,17 @@ export default function RootLayout({
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
       </head>
       <body className="font-body antialiased bg-background min-h-screen pb-20 md:pb-0">
-        <HydrationProvider>
-          <div className="max-w-4xl mx-auto px-4 md:px-8">
-            <Navigation />
-            <main className="py-6">
-              {children}
-            </main>
-          </div>
-        </HydrationProvider>
+        <FirebaseClientProvider>
+          <HydrationProvider>
+            <div className="max-w-4xl mx-auto px-4 md:px-8">
+              <Navigation />
+              <main className="py-6">
+                {children}
+              </main>
+            </div>
+            <Toaster />
+          </HydrationProvider>
+        </FirebaseClientProvider>
       </body>
     </html>
   );

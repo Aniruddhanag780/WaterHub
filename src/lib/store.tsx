@@ -1,12 +1,15 @@
-
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from "react"
+import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase"
+import { collection, doc, query, where, serverTimestamp } from "firebase/firestore"
+import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 
 export type WaterLog = {
   id: string
   amount: number
   timestamp: number
+  userId?: string
 }
 
 type HydrationContextType = {
@@ -25,78 +28,138 @@ type HydrationContextType = {
 const HydrationContext = createContext<HydrationContextType | undefined>(undefined)
 
 export function HydrationProvider({ children }: { children: React.ReactNode }) {
-  const [logs, setLogs] = useState<WaterLog[]>([])
-  const [goal, setGoal] = useState<number>(2500)
-  const [reminders, setRemindersState] = useState<string[]>([])
+  const { user, isUserLoading } = useUser()
+  const db = useFirestore()
+
+  // Local State (Fallback/Guest mode)
+  const [localLogs, setLocalLogs] = useState<WaterLog[]>([])
+  const [localGoal, setLocalGoal] = useState<number>(2500)
+  const [localReminders, setLocalReminders] = useState<string[]>([])
   const [isHydrated, setIsHydrated] = useState(false)
 
+  // Firestore Data
+  const logsQuery = useMemoFirebase(() => {
+    if (!db || !user) return null
+    return collection(db, "users", user.uid, "waterIntakes")
+  }, [db, user])
+
+  const profileRef = useMemoFirebase(() => {
+    if (!db || !user) return null
+    return doc(db, "users", user.uid, "profile", "profile")
+  }, [db, user])
+
+  const reminderRef = useMemoFirebase(() => {
+    if (!db || !user) return null
+    return doc(db, "users", user.uid, "reminderSetting", "reminderSetting")
+  }, [db, user])
+
+  const { data: firestoreLogs } = useCollection<WaterLog>(logsQuery)
+  const { data: firestoreProfile } = useDoc<any>(profileRef)
+  const { data: firestoreReminders } = useDoc<any>(reminderRef)
+
+  // Load from localStorage on mount
   useEffect(() => {
     const savedLogs = localStorage.getItem("hydrotrack_logs")
     const savedGoal = localStorage.getItem("hydrotrack_goal")
     const savedReminders = localStorage.getItem("hydrotrack_reminders")
-    if (savedLogs) setLogs(JSON.parse(savedLogs))
-    if (savedGoal) setGoal(Number(savedGoal))
-    if (savedReminders) setRemindersState(JSON.parse(savedReminders))
+    if (savedLogs) setLocalLogs(JSON.parse(savedLogs))
+    if (savedGoal) setLocalGoal(Number(savedGoal))
+    if (savedReminders) setLocalReminders(JSON.parse(savedReminders))
     setIsHydrated(true)
   }, [])
 
+  // Persist guest data to localStorage
   useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem("hydrotrack_logs", JSON.stringify(logs))
+    if (isHydrated && !user) {
+      localStorage.setItem("hydrotrack_logs", JSON.stringify(localLogs))
+      localStorage.setItem("hydrotrack_goal", localGoal.toString())
+      localStorage.setItem("hydrotrack_reminders", JSON.stringify(localReminders))
     }
-  }, [logs, isHydrated])
+  }, [localLogs, localGoal, localReminders, isHydrated, user])
 
-  useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem("hydrotrack_goal", goal.toString())
-    }
-  }, [goal, isHydrated])
-
-  useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem("hydrotrack_reminders", JSON.stringify(reminders))
-    }
-  }, [reminders, isHydrated])
+  // Merge Data Logic
+  const logs = user ? (firestoreLogs || []) : localLogs
+  const goal = user ? (firestoreProfile?.dailyGoalMl || localGoal) : localGoal
+  const reminders = user ? (firestoreReminders?.optimalReminderTimes || localReminders) : localReminders
 
   const addLog = (amount: number) => {
-    const newLog: WaterLog = {
-      id: Math.random().toString(36).substring(7),
-      amount,
-      timestamp: Date.now(),
+    const timestamp = Date.now()
+    if (user && db) {
+      const colRef = collection(db, "users", user.uid, "waterIntakes")
+      addDocumentNonBlocking(colRef, {
+        amountMl: amount,
+        timestamp: new Date(timestamp).toISOString(),
+        userId: user.uid,
+        source: 'manual',
+        createdAt: new Date().toISOString()
+      })
+    } else {
+      const newLog: WaterLog = {
+        id: Math.random().toString(36).substring(7),
+        amount,
+        timestamp,
+      }
+      setLocalLogs((prev) => [...prev, newLog])
     }
-    setLogs((prev) => [...prev, newLog])
   }
 
   const removeLog = (id: string) => {
-    setLogs((prev) => prev.filter((log) => log.id !== id))
+    if (user && db) {
+      const docRef = doc(db, "users", user.uid, "waterIntakes", id)
+      deleteDocumentNonBlocking(docRef)
+    } else {
+      setLocalLogs((prev) => prev.filter((log) => log.id !== id))
+    }
   }
 
   const setDailyGoal = (amount: number) => {
-    setGoal(amount)
+    if (user && db && profileRef) {
+      setDocumentNonBlocking(profileRef, {
+        dailyGoalMl: amount,
+        userId: user.uid,
+        preferredUnit: 'ml',
+        updatedAt: new Date().toISOString(),
+        id: 'profile'
+      }, { merge: true })
+    } else {
+      setLocalGoal(amount)
+    }
   }
 
   const setReminders = (times: string[]) => {
-    setRemindersState(times)
+    if (user && db && reminderRef) {
+      setDocumentNonBlocking(reminderRef, {
+        optimalReminderTimes: times,
+        userId: user.uid,
+        isEnabled: true,
+        updatedAt: new Date().toISOString(),
+        id: 'reminderSetting'
+      }, { merge: true })
+    } else {
+      setLocalReminders(times)
+    }
   }
 
   const todayStr = new Date().toLocaleDateString()
   const todayTotal = logs
-    .filter((log) => new Date(log.timestamp).toLocaleDateString() === todayStr)
-    .reduce((acc, curr) => acc + curr.amount, 0)
+    .filter((log) => {
+      const logDate = log.timestamp ? new Date(log.timestamp) : new Date()
+      return logDate.toLocaleDateString() === todayStr
+    })
+    .reduce((acc, curr) => acc + (curr.amount || (curr as any).amountMl || 0), 0)
 
-  // Proper history calculation
   const history: Record<string, number> = logs.reduce((acc, log) => {
-    const date = new Date(log.timestamp).toLocaleDateString()
-    acc[date] = (acc[date] || 0) + log.amount
+    const amount = log.amount || (log as any).amountMl || 0
+    const logDate = log.timestamp ? new Date(log.timestamp) : new Date()
+    const date = logDate.toLocaleDateString()
+    acc[date] = (acc[date] || 0) + amount
     return acc
   }, {} as Record<string, number>)
 
-  // Real Streak Calculation
   const streak = React.useMemo(() => {
     let currentStreak = 0
     const checkDate = new Date()
     
-    // Check backwards from today
     while (true) {
       const dateKey = checkDate.toLocaleDateString()
       const totalForDay = history[dateKey] || 0
@@ -105,15 +168,12 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         currentStreak++
         checkDate.setDate(checkDate.getDate() - 1)
       } else {
-        // If it's today and goal not met, streak might still be alive from yesterday
         if (dateKey === new Date().toLocaleDateString()) {
           checkDate.setDate(checkDate.getDate() - 1)
           continue
         }
         break
       }
-      
-      // Safety break to prevent infinite loops (though setDate handles this)
       if (currentStreak > 1000) break
     }
     return currentStreak

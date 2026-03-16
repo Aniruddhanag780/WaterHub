@@ -2,8 +2,11 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Droplet, History, Settings, Home } from "lucide-react"
+import { Droplet, History, Settings, Home, LogIn, LogOut, User } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useUser, useAuth } from "@/firebase"
+import { Button } from "@/components/ui/button"
+import { signOut } from "firebase/auth"
 
 const NAV_ITEMS = [
   { label: "Home", href: "/", icon: Home },
@@ -13,6 +16,12 @@ const NAV_ITEMS = [
 
 export function Navigation() {
   const pathname = usePathname()
+  const { user } = useUser()
+  const auth = useAuth()
+
+  const handleLogout = () => {
+    signOut(auth)
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-white/10 flex justify-around items-center h-16 px-4 md:relative md:border-t-0 md:bg-transparent md:h-20">
@@ -23,7 +32,7 @@ export function Navigation() {
         <span className="text-xl font-bold tracking-tight text-white">HydroTrack</span>
       </div>
       
-      <div className="flex gap-8 md:gap-4">
+      <div className="flex gap-4 md:gap-4 items-center">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -40,6 +49,31 @@ export function Navigation() {
             </Link>
           )
         })}
+
+        <div className="h-8 w-[1px] bg-white/10 mx-2 hidden md:block" />
+
+        {user ? (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={handleLogout}
+            className="text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl h-10 w-10"
+            title="Sign Out"
+          >
+            <LogOut className="w-6 h-6 md:w-5 md:h-5" />
+          </Button>
+        ) : (
+          <Link href="/login">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl h-10 w-10"
+              title="Sign In"
+            >
+              <LogIn className="w-6 h-6 md:w-5 md:h-5" />
+            </Button>
+          </Link>
+        )}
       </div>
     </nav>
   )
