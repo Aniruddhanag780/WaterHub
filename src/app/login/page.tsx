@@ -2,7 +2,13 @@
 
 import { useState } from "react"
 import { useAuth } from "@/firebase"
-import { initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn } from "@/firebase/non-blocking-login"
+import { 
+  initiateEmailSignIn, 
+  initiateEmailSignUp, 
+  initiateAnonymousSignIn,
+  initiateGoogleSignIn,
+  initiateMicrosoftSignIn
+} from "@/firebase/non-blocking-login"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -44,6 +50,40 @@ export default function LoginPage() {
         title: "Authentication Error",
         description: err.code === 'auth/operation-not-allowed' 
           ? "Email/Password sign-in is not enabled in your Firebase Console. Please enable it to continue."
+          : err.message,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleSignIn = async () => {
+    setLoading(true)
+    try {
+      await initiateGoogleSignIn(auth)
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: err.code === 'auth/operation-not-allowed' 
+          ? "Google sign-in is not enabled in your Firebase Console."
+          : err.message,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleMicrosoftSignIn = async () => {
+    setLoading(true)
+    try {
+      await initiateMicrosoftSignIn(auth)
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: err.code === 'auth/operation-not-allowed' 
+          ? "Microsoft sign-in is not enabled in your Firebase Console."
           : err.message,
       })
     } finally {
@@ -137,7 +177,7 @@ export default function LoginPage() {
           <Button 
             variant="outline" 
             className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
-            onClick={() => {}} 
+            onClick={handleGoogleSignIn} 
             disabled={loading}
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -164,7 +204,7 @@ export default function LoginPage() {
           <Button 
             variant="outline" 
             className="h-11 border-muted rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
-            onClick={() => {}} 
+            onClick={handleMicrosoftSignIn} 
             disabled={loading}
           >
             <svg className="w-4 h-4" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">

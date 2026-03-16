@@ -6,6 +6,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   GoogleAuthProvider,
+  OAuthProvider,
 } from 'firebase/auth';
 
 /** 
@@ -30,6 +31,22 @@ export function initiateEmailSignUp(authInstance: Auth, email: string, password:
  */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string) {
   return signInWithEmailAndPassword(authInstance, email, password);
+}
+
+/** 
+ * Initiate Google sign-in via popup.
+ */
+export function initiateGoogleSignIn(authInstance: Auth) {
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(authInstance, provider);
+}
+
+/** 
+ * Initiate Microsoft sign-in via popup.
+ */
+export function initiateMicrosoftSignIn(authInstance: Auth) {
+  const provider = new OAuthProvider('microsoft.com');
+  return signInWithPopup(authInstance, provider);
 }
 
 /** 
