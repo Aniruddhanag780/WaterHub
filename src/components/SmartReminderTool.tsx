@@ -69,7 +69,7 @@ export function SmartReminderTool() {
             <Input 
               value={schedule.wakeUp} 
               onChange={e => setSchedule(s => ({...s, wakeUp: e.target.value}))}
-              className="bg-white border-none shadow-sm"
+              className="bg-white border-none shadow-sm text-black"
             />
           </div>
           <div className="space-y-2">
@@ -77,7 +77,7 @@ export function SmartReminderTool() {
             <Input 
               value={schedule.sleep} 
               onChange={e => setSchedule(s => ({...s, sleep: e.target.value}))}
-              className="bg-white border-none shadow-sm"
+              className="bg-white border-none shadow-sm text-black"
             />
           </div>
         </div>
@@ -87,7 +87,7 @@ export function SmartReminderTool() {
             placeholder="E.g. I work at a desk most day, workout at 6pm..."
             value={schedule.activity}
             onChange={e => setSchedule(s => ({...s, activity: e.target.value}))}
-            className="bg-white border-none shadow-sm min-h-[100px]"
+            className="bg-white border-none shadow-sm min-h-[100px] text-black"
           />
         </div>
         
@@ -103,7 +103,7 @@ export function SmartReminderTool() {
         {suggestion && (
           <div className="mt-6 p-5 rounded-2xl bg-white border border-primary/20 animate-in fade-in zoom-in-95">
             <div className="flex items-center justify-between mb-4">
-              <h4 className="font-bold flex items-center gap-2">
+              <h4 className="font-bold flex items-center gap-2 text-black">
                 <Bell className="w-4 h-4 text-primary" /> Recommended Times
               </h4>
               <Button 
