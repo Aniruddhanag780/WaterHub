@@ -1,18 +1,16 @@
-
 "use client"
 
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { SmartReminderTool } from "@/components/SmartReminderTool"
-import { Target, Bell, UserCircle, Droplets } from "lucide-react"
+import { Target, UserCircle, Droplets, ShieldCheck } from "lucide-react"
 
 export default function SettingsPage() {
-  const { goal, setDailyGoal, reminders } = useHydration()
+  const { goal, setDailyGoal } = useHydration()
 
   return (
-    <div className="space-y-8 max-w-lg mx-auto pb-10">
+    <div className="space-y-8 max-w-lg mx-auto pb-10 text-white">
       <div className="space-y-1">
         <h1 className="text-3xl font-extrabold tracking-tight">Preferences</h1>
         <p className="text-muted-foreground font-medium">Personalize your HydroTrack experience.</p>
@@ -23,7 +21,7 @@ export default function SettingsPage() {
           <h3 className="text-lg font-bold flex items-center gap-2 px-1">
             <Target className="w-5 h-5 text-primary" /> Hydration Goal
           </h3>
-          <Card className="border-none shadow-sm rounded-2xl overflow-hidden">
+          <Card className="border-white/10 bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden">
             <CardContent className="pt-6 space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="goal" className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Daily Target (milliliters)</Label>
@@ -35,10 +33,10 @@ export default function SettingsPage() {
                       type="number" 
                       value={goal} 
                       onChange={(e) => setDailyGoal(Number(e.target.value))}
-                      className="pl-10 h-12 text-lg font-bold bg-muted/30 border-none rounded-xl"
+                      className="pl-10 h-12 text-lg font-bold bg-white/10 border-none rounded-xl text-white"
                     />
                   </div>
-                  <div className="flex items-center px-4 bg-primary text-white rounded-xl font-bold">
+                  <div className="flex items-center px-4 bg-primary text-background rounded-xl font-bold">
                     ML
                   </div>
                 </div>
@@ -51,32 +49,20 @@ export default function SettingsPage() {
         </section>
 
         <section className="space-y-4">
-          <div className="flex items-center justify-between px-1">
-            <h3 className="text-lg font-bold flex items-center gap-2">
-              <Bell className="w-5 h-5 text-primary" /> Reminders
-            </h3>
-            {reminders.length > 0 && (
-              <span className="text-[10px] font-bold text-emerald-500 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 uppercase">
-                Active: {reminders.length}
-              </span>
-            )}
-          </div>
-          <SmartReminderTool />
-        </section>
-
-        <section className="space-y-4">
           <h3 className="text-lg font-bold flex items-center gap-2 px-1">
-            <UserCircle className="w-5 h-5 text-primary" /> Profile
+            <UserCircle className="w-5 h-5 text-primary" /> Profile & Security
           </h3>
-          <Card className="border-none shadow-sm rounded-2xl overflow-hidden bg-white/50 backdrop-blur-sm">
-            <CardContent className="pt-6">
+          <Card className="border-white/10 bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden">
+            <CardContent className="pt-6 space-y-4">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 shadow-inner">
                   <UserCircle className="w-10 h-10 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg">HydroTrack Explorer</h4>
-                  <p className="text-sm text-muted-foreground font-medium">Free Lifetime Member</p>
+                  <h4 className="font-bold text-lg text-white">HydroTrack Explorer</h4>
+                  <p className="text-sm text-muted-foreground font-medium flex items-center gap-1">
+                    <ShieldCheck className="w-3 h-3 text-emerald-400" /> Cloud Sync Active
+                  </p>
                 </div>
               </div>
             </CardContent>

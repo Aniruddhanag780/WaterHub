@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Droplet, History, Settings, Home, LogIn, LogOut, User } from "lucide-react"
+import { Droplet, History, Settings, Home, LogIn, LogOut, Bell } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser, useAuth } from "@/firebase"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { signOut } from "firebase/auth"
 const NAV_ITEMS = [
   { label: "Home", href: "/", icon: Home },
   { label: "History", href: "/history", icon: History },
+  { label: "Reminders", href: "/reminders", icon: Bell },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 
@@ -32,7 +33,7 @@ export function Navigation() {
         <span className="text-xl font-bold tracking-tight text-white">HydroTrack</span>
       </div>
       
-      <div className="flex gap-4 md:gap-4 items-center">
+      <div className="flex gap-2 md:gap-4 items-center">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href
           return (
@@ -40,11 +41,11 @@ export function Navigation() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 px-4 py-1 rounded-xl transition-all md:flex-row md:gap-2",
+                "flex flex-col items-center justify-center gap-1 px-3 py-1 rounded-xl transition-all md:flex-row md:gap-2",
                 isActive ? "text-primary bg-primary/10 shadow-[0_0_15px_rgba(0,229,255,0.1)]" : "text-muted-foreground hover:text-white"
               )}
             >
-              <item.icon className="w-6 h-6 md:w-5 md:h-5" />
+              <item.icon className="w-5 h-5 md:w-5 md:h-5" />
               <span className="text-[10px] md:text-sm font-semibold">{item.label}</span>
             </Link>
           )
@@ -60,7 +61,7 @@ export function Navigation() {
             className="text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl h-10 w-10"
             title="Sign Out"
           >
-            <LogOut className="w-6 h-6 md:w-5 md:h-5" />
+            <LogOut className="w-5 h-5" />
           </Button>
         ) : (
           <Link href="/login">
@@ -70,7 +71,7 @@ export function Navigation() {
               className="text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl h-10 w-10"
               title="Sign In"
             >
-              <LogIn className="w-6 h-6 md:w-5 md:h-5" />
+              <LogIn className="w-5 h-5" />
             </Button>
           </Link>
         )}
