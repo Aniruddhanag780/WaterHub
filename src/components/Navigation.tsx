@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Droplet, History, Settings, Home, LogIn, LogOut, Bell } from "lucide-react"
+import { Droplet, History, Settings, Home, LogIn, LogOut, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser, useAuth } from "@/firebase"
 import { Button } from "@/components/ui/button"
@@ -11,7 +11,7 @@ import { signOut } from "firebase/auth"
 const NAV_ITEMS = [
   { label: "Home", href: "/", icon: Home },
   { label: "History", href: "/history", icon: History },
-  { label: "Reminders", href: "/reminders", icon: Bell },
+  { label: "AI Suggestion", href: "/reminders", icon: Sparkles },
   { label: "Settings", href: "/settings", icon: Settings },
 ]
 
