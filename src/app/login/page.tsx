@@ -68,6 +68,7 @@ export default function LoginPage() {
       })
     } finally {
       setLoading(false)
+      setShowWarning(false)
       setPendingAction(null)
     }
   }
@@ -196,7 +197,7 @@ export default function LoginPage() {
               className="bg-[#f4f4f5] border border-[#e4e4e7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
             {!isSignUp && (
-              <div className="flex justify-end">
+              <div className="flex justify-end mt-1">
                 <Button 
                   type="button"
                   variant="link" 
