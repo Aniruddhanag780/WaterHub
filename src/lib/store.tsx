@@ -7,8 +7,9 @@ import { setDocumentNonBlocking, addDocumentNonBlocking, deleteDocumentNonBlocki
 
 export type WaterLog = {
   id: string
-  amount: number
-  timestamp: number
+  amount?: number       // For local storage/legacy
+  amountMl?: number     // For Firestore/Backend alignment
+  timestamp: string | number
   userId?: string
 }
 
@@ -146,10 +147,10 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       const logDate = log.timestamp ? new Date(log.timestamp) : new Date()
       return logDate.toLocaleDateString() === todayStr
     })
-    .reduce((acc, curr) => acc + (curr.amount || (curr as any).amountMl || 0), 0)
+    .reduce((acc, curr) => acc + (curr.amountMl ?? curr.amount ?? 0), 0)
 
   const history: Record<string, number> = logs.reduce((acc, log) => {
-    const amount = log.amount || (log as any).amountMl || 0
+    const amount = log.amountMl ?? log.amount ?? 0
     const logDate = log.timestamp ? new Date(log.timestamp) : new Date()
     const date = logDate.toLocaleDateString()
     acc[date] = (acc[date] || 0) + amount
