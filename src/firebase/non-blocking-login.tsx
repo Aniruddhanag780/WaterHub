@@ -1,4 +1,3 @@
-
 'use client';
 import {
   Auth,
@@ -9,19 +8,28 @@ import {
   GoogleAuthProvider,
 } from 'firebase/auth';
 
-/** Initiate anonymous sign-in (non-blocking). */
-export function initiateAnonymousSignIn(authInstance: Auth): void {
-  signInAnonymously(authInstance);
+/** 
+ * Initiate anonymous sign-in. 
+ * Returns the promise so the caller can catch specific configuration errors.
+ */
+export function initiateAnonymousSignIn(authInstance: Auth) {
+  return signInAnonymously(authInstance);
 }
 
-/** Initiate email/password sign-up (non-blocking). */
-export function initiateEmailSignUp(authInstance: Auth, email: string, password: string): void {
-  createUserWithEmailAndPassword(authInstance, email, password);
+/** 
+ * Initiate email/password sign-up. 
+ * Returns the promise so the caller can catch specific configuration errors.
+ */
+export function initiateEmailSignUp(authInstance: Auth, email: string, password: string) {
+  return createUserWithEmailAndPassword(authInstance, email, password);
 }
 
-/** Initiate email/password sign-in (non-blocking). */
-export function initiateEmailSignIn(authInstance: Auth, email: string, password: string): void {
-  signInWithEmailAndPassword(authInstance, email, password);
+/** 
+ * Initiate email/password sign-in. 
+ * Returns the promise so the caller can catch specific configuration errors.
+ */
+export function initiateEmailSignIn(authInstance: Auth, email: string, password: string) {
+  return signInWithEmailAndPassword(authInstance, email, password);
 }
 
 /** 
@@ -36,8 +44,10 @@ export async function signInWithGoogleForDrive(authInstance: Auth): Promise<stri
     const result = await signInWithPopup(authInstance, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     return credential?.accessToken || null;
-  } catch (error) {
-    console.error("Error connecting to Google Drive:", error);
-    return null;
+  } catch (error: any) {
+    if (error.code === 'auth/operation-not-allowed') {
+      throw new Error("Google Sign-In is not enabled in your Firebase Console. Please enable it in the Authentication > Sign-in method section.");
+    }
+    throw error;
   }
 }

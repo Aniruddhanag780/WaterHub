@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useHydration } from "@/lib/store"
@@ -11,10 +10,12 @@ import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/firebase"
 import { signInWithGoogleForDrive } from "@/firebase/non-blocking-login"
+import { useToast } from "@/hooks/use-toast"
 
 export default function SettingsPage() {
   const { goal, setDailyGoal, syncLogsToDrive } = useHydration()
   const auth = useAuth()
+  const { toast } = useToast()
   const [isDriveConnected, setIsDriveConnected] = useState(false)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -27,7 +28,17 @@ export default function SettingsPage() {
       if (token) {
         setAccessToken(token)
         setIsDriveConnected(true)
+        toast({
+          title: "Google Drive Connected",
+          description: "You can now sync your history to your cloud storage.",
+        })
       }
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Connection Failed",
+        description: err.message,
+      })
     } finally {
       setIsConnecting(false)
     }

@@ -11,11 +11,13 @@ import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useEffect } from "react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 export default function LoginPage() {
   const auth = useAuth()
   const { user } = useUser()
   const router = useRouter()
+  const { toast } = useToast()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -32,20 +34,38 @@ export default function LoginPage() {
     setLoading(true)
     try {
       if (isSignUp) {
-        initiateEmailSignUp(auth, email, password)
+        await initiateEmailSignUp(auth, email, password)
       } else {
-        initiateEmailSignIn(auth, email, password)
+        await initiateEmailSignIn(auth, email, password)
       }
-    } catch (err) {
-      console.error(err)
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: err.code === 'auth/operation-not-allowed' 
+          ? "Email/Password sign-in is not enabled in your Firebase Console. Please enable it to continue."
+          : err.message,
+      })
     } finally {
       setLoading(false)
     }
   }
 
-  const handleGuest = () => {
+  const handleGuest = async () => {
     setLoading(true)
-    initiateAnonymousSignIn(auth)
+    try {
+      await initiateAnonymousSignIn(auth)
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: err.code === 'auth/operation-not-allowed' 
+          ? "Anonymous sign-in is not enabled in your Firebase Console."
+          : err.message,
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
