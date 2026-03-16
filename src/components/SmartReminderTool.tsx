@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Sparkles, Bell, Clock, Check } from "lucide-react"
 
 export function SmartReminderTool() {
@@ -18,8 +19,10 @@ export function SmartReminderTool() {
   const [applied, setApplied] = useState(false)
   
   const [schedule, setSchedule] = useState({
-    wakeUp: "07:00 AM",
-    sleep: "10:00 PM",
+    wakeUpTime: "07:00",
+    wakeUpPeriod: "AM",
+    sleepTime: "10:00",
+    sleepPeriod: "PM",
     activity: "Work from 9 to 5, gym in evening around 6 PM."
   })
 
@@ -30,8 +33,8 @@ export function SmartReminderTool() {
     setApplied(false)
     try {
       const result = await intelligentHydrationReminders({
-        wakeUpTime: schedule.wakeUp,
-        sleepTime: schedule.sleep,
+        wakeUpTime: `${schedule.wakeUpTime} ${schedule.wakeUpPeriod}`,
+        sleepTime: `${schedule.sleepTime} ${schedule.sleepPeriod}`,
         activityPattern: schedule.activity,
         dailyGoalMl: goal,
         averageIntakeMl: averageIntake
@@ -63,22 +66,54 @@ export function SmartReminderTool() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Wake Up</Label>
-            <Input 
-              value={schedule.wakeUp} 
-              onChange={e => setSchedule(s => ({...s, wakeUp: e.target.value}))}
-              className="bg-white border-none shadow-sm text-black"
-            />
+            <div className="flex gap-2">
+              <Input 
+                type="text"
+                placeholder="07:00"
+                value={schedule.wakeUpTime} 
+                onChange={e => setSchedule(s => ({...s, wakeUpTime: e.target.value}))}
+                className="bg-white border-none shadow-sm text-black flex-1"
+              />
+              <Select 
+                value={schedule.wakeUpPeriod} 
+                onValueChange={value => setSchedule(s => ({...s, wakeUpPeriod: value}))}
+              >
+                <SelectTrigger className="w-[80px] bg-white border-none shadow-sm text-black">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AM">AM</SelectItem>
+                  <SelectItem value="PM">PM</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           <div className="space-y-2">
             <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Sleep Time</Label>
-            <Input 
-              value={schedule.sleep} 
-              onChange={e => setSchedule(s => ({...s, sleep: e.target.value}))}
-              className="bg-white border-none shadow-sm text-black"
-            />
+            <div className="flex gap-2">
+              <Input 
+                type="text"
+                placeholder="10:00"
+                value={schedule.sleepTime} 
+                onChange={e => setSchedule(s => ({...s, sleepTime: e.target.value}))}
+                className="bg-white border-none shadow-sm text-black flex-1"
+              />
+              <Select 
+                value={schedule.sleepPeriod} 
+                onValueChange={value => setSchedule(s => ({...s, sleepPeriod: value}))}
+              >
+                <SelectTrigger className="w-[80px] bg-white border-none shadow-sm text-black">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="AM">AM</SelectItem>
+                  <SelectItem value="PM">PM</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         <div className="space-y-2">
