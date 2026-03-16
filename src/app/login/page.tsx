@@ -92,7 +92,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-slate-100/50 border border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:bg-slate-100 transition-all border-none shadow-sm"
+              className="bg-slate-50 border-2 border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:bg-white focus:border-primary transition-all shadow-sm"
             />
           </div>
           <div className="space-y-3">
@@ -104,7 +104,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-slate-100/50 border border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:bg-slate-100 transition-all border-none shadow-sm"
+              className="bg-slate-50 border-2 border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:bg-white focus:border-primary transition-all shadow-sm"
             />
             {!isSignUp && (
               <div className="text-right">
