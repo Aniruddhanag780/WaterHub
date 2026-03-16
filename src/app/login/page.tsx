@@ -70,21 +70,21 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[90vh] px-4 py-10">
-      <div className="w-full max-w-md bg-white rounded-[2.5rem] p-10 shadow-2xl text-black border border-slate-100">
+      <div className="w-full max-w-md bg-[#0A0C14] rounded-[2.5rem] p-10 shadow-2xl border border-white/10 ring-1 ring-white/5 backdrop-blur-xl">
         <div className="text-center mb-10 space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
+          <h1 className="text-4xl font-extrabold tracking-tight text-[#FFF9E5]">
             {isSignUp ? "Join Us!" : "Welcome Back!"}
           </h1>
-          <p className="text-slate-500 text-lg leading-snug max-w-[280px] mx-auto font-medium">
+          <p className="text-[#FFF9E5]/70 text-lg leading-snug max-w-[280px] mx-auto font-medium">
             {isSignUp 
               ? "Start your hydration journey with us today." 
-              : "Please enter your email below to sign in to your account."}
+              : "Please enter your details below to access your account."}
           </p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-6">
           <div className="space-y-3">
-            <Label htmlFor="email" className="font-bold text-slate-900 text-base ml-1">Email</Label>
+            <Label htmlFor="email" className="font-bold text-[#FFD700] text-base ml-1">Email Address</Label>
             <Input 
               id="email" 
               type="email" 
@@ -92,23 +92,23 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-slate-50 border-2 border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:bg-white focus:border-primary transition-all shadow-sm"
+              className="bg-white/5 border-2 border-[#FFD700]/30 text-[#FFF9E5] h-14 rounded-2xl placeholder:text-white/20 px-5 text-lg focus:bg-white/10 focus:border-[#FFD700] transition-all shadow-inner"
             />
           </div>
           <div className="space-y-3">
-            <Label htmlFor="password" title="Password Label" className="font-bold text-slate-900 text-base ml-1">Password</Label>
+            <Label htmlFor="password" title="Password Label" className="font-bold text-[#FFD700] text-base ml-1">Password</Label>
             <Input 
               id="password" 
               type="password" 
-              placeholder="........"
+              placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-slate-50 border-2 border-slate-200 text-slate-900 h-14 rounded-2xl placeholder:text-slate-400 px-5 text-lg focus:bg-white focus:border-primary transition-all shadow-sm"
+              className="bg-white/5 border-2 border-[#FFD700]/30 text-[#FFF9E5] h-14 rounded-2xl placeholder:text-white/20 px-5 text-lg focus:bg-white/10 focus:border-[#FFD700] transition-all shadow-inner"
             />
             {!isSignUp && (
               <div className="text-right">
-                <Button variant="link" className="text-sm font-bold text-slate-900 p-0 h-auto hover:no-underline">
+                <Button variant="link" className="text-sm font-bold text-[#FFD700] p-0 h-auto hover:text-[#FFF9E5] hover:no-underline">
                   Forgot your password?
                 </Button>
               </div>
@@ -117,7 +117,7 @@ export default function LoginPage() {
           
           <Button 
             type="submit" 
-            className="w-full h-14 rounded-2xl bg-[#1A1A1A] hover:bg-black text-white font-bold text-lg transition-all"
+            className="w-full h-14 rounded-2xl bg-[#FFD700] hover:bg-[#FFC400] text-black font-black text-lg transition-all shadow-[0_0_20px_rgba(255,215,0,0.2)]"
             disabled={loading}
           >
             {loading ? <Loader2 className="w-6 h-6 animate-spin mr-2" /> : (isSignUp ? "Sign up" : "Sign in")}
@@ -126,45 +126,45 @@ export default function LoginPage() {
 
         <div className="relative my-10">
           <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-slate-200"></span>
+            <span className="w-full border-t border-white/10"></span>
           </div>
-          <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-slate-400">
-            <span className="bg-white px-4">OR CONTINUE WITH</span>
+          <div className="relative flex justify-center text-[10px] uppercase font-bold tracking-widest text-[#FFF9E5]/40">
+            <span className="bg-[#0A0C14] px-4">OR CONTINUE WITH</span>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-3 mb-10">
-          <Button variant="outline" className="h-14 border-slate-200 rounded-2xl bg-white hover:bg-slate-50 transition-all flex items-center justify-center gap-2 px-0 text-sm font-bold" onClick={() => {}}>
+          <Button variant="outline" className="h-14 border-white/10 rounded-2xl bg-white/5 hover:bg-white/10 text-[#FFF9E5] transition-all flex items-center justify-center gap-2 px-0 text-xs font-bold" onClick={() => {}}>
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="#EA4335" d="M12.48 10.92v3.28h7.84c-.24 1.84-.96 3.4-2.12 4.52-1.48 1.44-3.76 2.52-7.2 2.52-5.92 0-10.84-4.8-10.84-10.72S5.04 2.8 10.96 2.8c3.2 0 5.68 1.28 7.4 2.92l2.4-2.4C18.6 1.28 15.12 0 11 0 4.92 0 0 4.92 0 11s4.92 11 11 11c3.28 0 6.16-1.08 8.4-3.24 2.32-2.28 3.12-5.52 3.12-8.32 0-.64-.04-1.24-.12-1.8H12.48z" />
             </svg>
             Google
           </Button>
-          <Button variant="outline" className="h-14 border-slate-200 rounded-2xl bg-white hover:bg-slate-50 transition-all flex items-center justify-center gap-2 px-0 text-sm font-bold" onClick={() => {}}>
+          <Button variant="outline" className="h-14 border-white/10 rounded-2xl bg-white/5 hover:bg-white/10 text-[#FFF9E5] transition-all flex items-center justify-center gap-2 px-0 text-xs font-bold" onClick={() => {}}>
              <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H1z"/><path fill="#ffba08" d="M12 12h10v10H12z"/>
+              <path fill="#f35325" d="M1 1h10v10H1z"/><path fill="#81bc06" d="M12 1h10v10H12z"/><path fill="#05a6f0" d="M1 12h10v10H12z"/><path fill="#ffba08" d="M12 12h10v10H12z"/>
             </svg>
             Microsoft
           </Button>
-          <Button variant="outline" className="h-14 border-slate-200 rounded-2xl bg-white hover:bg-slate-50 transition-all flex items-center justify-center gap-2 px-0 text-sm font-bold" onClick={handleGuest}>
-            <Phone className="w-4 h-4 text-slate-700" />
-            Phone
+          <Button variant="outline" className="h-14 border-white/10 rounded-2xl bg-white/5 hover:bg-white/10 text-[#FFF9E5] transition-all flex items-center justify-center gap-2 px-0 text-xs font-bold" onClick={handleGuest}>
+            <Phone className="w-4 h-4 text-[#FFD700]" />
+            Guest
           </Button>
         </div>
 
         <div className="text-center space-y-6">
-          <p className="text-[13px] text-slate-500 font-medium leading-relaxed max-w-[320px] mx-auto">
+          <p className="text-[13px] text-[#FFF9E5]/40 font-medium leading-relaxed max-w-[320px] mx-auto">
             By continuing, you agree to our{" "}
-            <Link href="#" className="underline font-bold text-slate-900">Terms of Service</Link>
+            <Link href="#" className="underline font-bold text-[#FFD700]">Terms</Link>
             {" "}and{" "}
-            <Link href="#" className="underline font-bold text-slate-900">Privacy Policy</Link>.
+            <Link href="#" className="underline font-bold text-[#FFD700]">Privacy Policy</Link>.
           </p>
 
-          <p className="text-base font-medium text-slate-500">
+          <p className="text-base font-medium text-[#FFF9E5]/60">
             {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
             <Button 
               variant="link" 
-              className="text-slate-900 font-bold p-0 h-auto text-base hover:no-underline" 
+              className="text-[#FFD700] font-black p-0 h-auto text-base hover:text-[#FFF9E5] hover:no-underline" 
               onClick={() => setIsSignUp(!isSignUp)}
             >
               {isSignUp ? "Sign in" : "Sign up"}
