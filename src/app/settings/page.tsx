@@ -4,10 +4,20 @@ import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Target, UserCircle, Droplets, ShieldCheck } from "lucide-react"
+import { Target, UserCircle, Droplets, ShieldCheck, Cloud, Check } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useState } from "react"
+import { cn } from "@/lib/utils"
 
 export default function SettingsPage() {
   const { goal, setDailyGoal } = useHydration()
+  const [isDriveConnected, setIsDriveConnected] = useState(false)
+
+  const handleConnectDrive = () => {
+    // In a production app, this would initiate OAuth2 flow with Drive scopes.
+    // For the prototype, we simulate the connection state.
+    setIsDriveConnected(true)
+  }
 
   return (
     <div className="space-y-8 max-w-lg mx-auto pb-10 text-white">
@@ -53,7 +63,7 @@ export default function SettingsPage() {
             <UserCircle className="w-5 h-5 text-primary" /> Profile & Security
           </h3>
           <Card className="border-white/10 bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden">
-            <CardContent className="pt-6 space-y-4">
+            <CardContent className="pt-6 space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 shadow-inner">
                   <UserCircle className="w-10 h-10 text-primary" />
@@ -63,6 +73,38 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground font-medium flex items-center gap-1">
                     <ShieldCheck className="w-3 h-3 text-emerald-400" /> Cloud Sync Active
                   </p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-white/5 space-y-4">
+                <div className="flex flex-col gap-3">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">External Backup</Label>
+                  <div className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 group hover:bg-white/10 transition-all">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
+                        <Cloud className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-white">Google Drive</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Backup your hydration history</p>
+                      </div>
+                    </div>
+                    <Button 
+                      variant={isDriveConnected ? "ghost" : "outline"} 
+                      size="sm" 
+                      onClick={handleConnectDrive}
+                      className={cn(
+                        "rounded-lg border-white/10 h-8 px-4 font-bold text-xs",
+                        isDriveConnected ? "text-emerald-400 cursor-default hover:bg-transparent" : "hover:bg-primary hover:text-black hover:border-primary"
+                      )}
+                    >
+                      {isDriveConnected ? (
+                        <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>
+                      ) : (
+                        "Connect"
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
