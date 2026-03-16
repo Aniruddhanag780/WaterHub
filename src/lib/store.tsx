@@ -161,10 +161,14 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         description: "Your hydration history has been saved to Google Drive.",
       })
     } catch (error: any) {
+      let message = error.message || "Could not save to Google Drive."
+      if (message.includes("Google Drive API has not been used") || message.includes("disabled")) {
+        message = "The Google Drive API is disabled. Please enable it in the Google Cloud Console for this project."
+      }
       toast({
         variant: "destructive",
         title: "Backup failed",
-        description: error.message || "Could not save to Google Drive.",
+        description: message,
       })
     }
   }
