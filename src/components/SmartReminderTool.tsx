@@ -158,7 +158,7 @@ export function SmartReminderTool() {
               ))}
             </div>
             <div className="p-3 rounded-xl bg-muted/50">
-              <p className="text-xs text-muted-foreground leading-relaxed italic">
+              <p className="text-xs text-slate-700 leading-relaxed italic font-medium">
                 &quot;{suggestion.explanation}&quot;
               </p>
             </div>
