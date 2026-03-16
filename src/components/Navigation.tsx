@@ -15,12 +15,12 @@ export function Navigation() {
   const pathname = usePathname()
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-t border-border flex justify-around items-center h-16 px-4 md:relative md:border-t-0 md:bg-transparent md:h-20">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-white/10 flex justify-around items-center h-16 px-4 md:relative md:border-t-0 md:bg-transparent md:h-20">
       <div className="hidden md:flex items-center gap-2 mr-auto text-primary">
         <div className="p-2 bg-primary/10 rounded-lg">
           <Droplet className="w-6 h-6 fill-current" />
         </div>
-        <span className="text-xl font-bold tracking-tight">HydroTrack</span>
+        <span className="text-xl font-bold tracking-tight text-white">HydroTrack</span>
       </div>
       
       <div className="flex gap-8 md:gap-4">
@@ -31,8 +31,8 @@ export function Navigation() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 px-4 py-1 rounded-xl transition-colors md:flex-row md:gap-2",
-                isActive ? "text-primary bg-primary/10" : "text-muted-foreground hover:text-foreground"
+                "flex flex-col items-center justify-center gap-1 px-4 py-1 rounded-xl transition-all md:flex-row md:gap-2",
+                isActive ? "text-primary bg-primary/10 shadow-[0_0_15px_rgba(0,229,255,0.1)]" : "text-muted-foreground hover:text-white"
               )}
             >
               <item.icon className="w-6 h-6 md:w-5 md:h-5" />

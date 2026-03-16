@@ -14,19 +14,20 @@
 - **State Management:** React Context API with LocalStorage persistence
 
 ## Design Language
-- **Theme:** "Crystal Clear" - Use a primary vibrant cyan (`#00E5FF`) and deeper teal accents.
+- **Theme:** "Deep Sea" - Vibrant Aqua Blue (`#00E5FF`) accents set against a deep Navy Blue (`#0B1324`) background.
 - **Visual Style:** 
   - Glassmorphism (semi-transparent backgrounds with backdrop blur).
-  - Heavy use of rounded corners (`radius: 1rem` or higher).
+  - High contrast typography for readability in low-light/dark mode.
+  - Heavy use of rounded corners (`radius: 1.25rem`).
   - Fluid animations for progress bars and "filling" effects.
   - Mobile-first approach with a persistent bottom navigation bar.
 
 ## Feature Requirements
 
 ### 1. Dashboard (Home)
-- **Water Progress Ring:** A large, elegant SVG circle showing percentage completion.
-- **Glass Visual:** A 2D/3D-style water glass that fills up dynamically.
-- **Next Reminder Card:** A prominent card showing the AI-scheduled time for the next drink.
+- **Water Progress Ring:** A large, elegant SVG circle showing percentage completion with a gradient stroke.
+- **Glass Visual:** A 2D-style water glass that fills up dynamically with animated waves.
+- **Next Reminder Card:** A prominent glassmorphic card showing the AI-scheduled time for the next drink.
 - **Quick Logs:** Large buttons for common presets (150ml, 250ml, 500ml) plus a custom "Add" input.
 - **Streak Tracker:** An energetic flame icon showing the number of consecutive days the goal was met.
 
@@ -37,13 +38,13 @@
 ### 3. AI Smart Reminders (Genkit)
 - **Flow Definition:** `intelligentHydrationReminders`.
 - **Input:** Wake-up time, Sleep time, Daily Activity Pattern (text), and Hydration Goal.
-- **Logic:** The AI should spread 6-8 reminders throughout the user's waking hours, specifically avoiding times of high activity (like gym sessions) or sleep.
-- **Persistence:** Suggested times must be savable to the global state.
+- **Logic:** The AI should spread 6-8 reminders throughout the user's waking hours, specifically avoiding times of high activity or sleep.
+- **Persistence:** Suggested times are saved to LocalStorage and displayed in the UI.
 
 ### 4. Settings & Profile
 - **Goal Setting:** Ability to update the daily target in ML.
 - **Routine Input:** Fields to update wake/sleep and daily activity for the AI to process.
-- **Profile Card:** A simple user overview for personalization.
+- **Profile Card:** A sleek user overview for personalization.
 
 ## Data Schema
 - **WaterLog:** `{ id: string, amount: number, timestamp: number }`
