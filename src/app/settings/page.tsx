@@ -4,7 +4,7 @@ import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Target, UserCircle, Droplets, ShieldCheck, Cloud, Check } from "lucide-react"
+import { Target, UserCircle, Droplets, ShieldCheck, Cloud, Check, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import { cn } from "@/lib/utils"
@@ -71,7 +71,15 @@ export default function SettingsPage() {
                 <div>
                   <h4 className="font-bold text-lg text-white">HydroTrack Explorer</h4>
                   <p className="text-sm text-muted-foreground font-medium flex items-center gap-1">
-                    <ShieldCheck className="w-3 h-3 text-emerald-400" /> Cloud Sync Active
+                    {isDriveConnected ? (
+                      <>
+                        <ShieldCheck className="w-3 h-3 text-emerald-400" /> Cloud Sync Active
+                      </>
+                    ) : (
+                      <>
+                        <AlertCircle className="w-3 h-3 text-orange-400" /> Connect Google Drive for cloud sync
+                      </>
+                    )}
                   </p>
                 </div>
               </div>
