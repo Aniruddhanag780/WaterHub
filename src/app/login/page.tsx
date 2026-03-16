@@ -6,7 +6,7 @@ import { initiateEmailSignIn, initiateEmailSignUp, initiateAnonymousSignIn } fro
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, Phone } from "lucide-react"
+import { Loader2, User } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useEffect } from "react"
@@ -96,7 +96,14 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="password" title="Password Label" className="font-semibold text-sm">Password</Label>
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password" title="Password Label" className="font-semibold text-sm">Password</Label>
+              {!isSignUp && (
+                <Button variant="link" className="text-xs font-bold text-black p-0 h-auto hover:underline">
+                  Forgot password?
+                </Button>
+              )}
+            </div>
             <Input 
               id="password" 
               type="password" 
@@ -106,13 +113,6 @@ export default function LoginPage() {
               required
               className="bg-[#f4f4f5] border-none text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
-            {!isSignUp && (
-              <div className="text-right">
-                <Button variant="link" className="text-sm font-bold text-black p-0 h-auto hover:underline">
-                  Forgot your password?
-                </Button>
-              </div>
-            )}
           </div>
           
           <Button 
@@ -182,8 +182,8 @@ export default function LoginPage() {
             onClick={handleGuest}
             disabled={loading}
           >
-            <Phone className="w-4 h-4" />
-            Phone
+            <User className="w-4 h-4" />
+            Guest
           </Button>
         </div>
 
