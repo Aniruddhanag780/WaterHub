@@ -172,7 +172,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleAuthAttempt} className="space-y-6">
+        <form onSubmit={handleAuthAttempt} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email" className="font-semibold text-sm">Email</Label>
             <Input 
@@ -196,19 +196,20 @@ export default function LoginPage() {
               required
               className="bg-[#f4f4f5] border border-[#e4e4e7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
-            {!isSignUp && (
-              <div className="flex justify-end mt-1">
-                <Button 
-                  type="button"
-                  variant="link" 
-                  onClick={handleForgotPassword}
-                  className="text-sm font-medium text-black p-0 h-auto hover:text-black/70 hover:underline transition-colors"
-                >
-                  Forgot password?
-                </Button>
-              </div>
-            )}
           </div>
+
+          {!isSignUp && (
+            <div className="flex justify-end py-1">
+              <Button 
+                type="button"
+                variant="link" 
+                onClick={handleForgotPassword}
+                className="text-sm font-medium text-black p-0 h-auto hover:text-black/70 hover:underline transition-colors"
+              >
+                Forgot password?
+              </Button>
+            </div>
+          )}
           
           <Button 
             type="submit" 
@@ -274,8 +275,8 @@ export default function LoginPage() {
           <p className="text-xs text-muted-foreground leading-relaxed px-2">
             By continuing, you agree to our <Link href="#" className="underline font-medium text-black">Terms of Service</Link> and <Link href="#" className="underline font-medium text-black">Privacy Policy</Link>.
           </p>
-          <p className="text-sm text-muted-foreground font-medium">
-            {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+          <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground font-medium">
+            <span>{isSignUp ? "Already have an account?" : "Don't have an account?"}</span>
             <Button 
               variant="link" 
               className="text-black font-bold p-0 h-auto text-sm underline hover:text-black/70" 
@@ -283,7 +284,7 @@ export default function LoginPage() {
             >
               {isSignUp ? "Sign In" : "Sign Up"}
             </Button>
-          </p>
+          </div>
         </div>
       </div>
 
