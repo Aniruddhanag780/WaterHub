@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState } from "react"
@@ -26,7 +25,8 @@ export function SmartReminderTool() {
     activity: "Work from 9 to 5, gym in evening around 6 PM."
   })
 
-  const averageIntake = logs.length > 0 ? logs.reduce((acc, l) => acc + l.amount, 0) / Math.max(1, (logs.length / 5)) : 1200
+  // Estimate average intake for the AI context
+  const averageIntake = logs.length > 0 ? logs.reduce((acc, l) => acc + (l.amountMl ?? l.amount ?? 0), 0) / Math.max(1, (logs.length / 5)) : 1200
 
   const handleGetSuggestions = async () => {
     setLoading(true)
@@ -152,8 +152,8 @@ export function SmartReminderTool() {
             </div>
             <div className="flex flex-wrap gap-2 mb-4">
               {suggestion.suggestedReminderTimes.map(time => (
-                <span key={time} className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-sm font-bold flex items-center gap-1">
-                  <Clock className="w-3 h-3" /> {time}
+                <span key={time} className="px-3 py-1 bg-primary/10 text-black rounded-lg text-sm font-bold flex items-center gap-1">
+                  <Clock className="w-3 h-3 text-primary" /> {time}
                 </span>
               ))}
             </div>
