@@ -166,7 +166,7 @@ export default function LoginPage() {
             />
             {!isSignUp && (
               <div className="flex justify-end">
-                <Button variant="link" className="text-sm font-medium text-muted-foreground p-0 h-auto hover:text-black hover:underline transition-colors">
+                <Button variant="link" className="text-sm font-medium text-black p-0 h-auto hover:text-black/70 hover:underline transition-colors">
                   Forgot password?
                 </Button>
               </div>
