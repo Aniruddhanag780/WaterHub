@@ -14,7 +14,7 @@
 - **State Management:** React Context API with LocalStorage persistence
 
 ## Design Language
-- **Theme:** "Deep Sea" - Vibrant Aqua Blue (`#00E5FF`) accents set against a deep Navy Blue (`#0B1324`) background.
+- **Theme:** "Midnight Oceanic" - Vibrant Aqua Blue (`#00E5FF`) accents set against a "Slightly Dark" Navy Blue (`#06080E`) background.
 - **Visual Style:** 
   - Glassmorphism (semi-transparent backgrounds with backdrop blur).
   - High contrast typography for readability in low-light/dark mode.
