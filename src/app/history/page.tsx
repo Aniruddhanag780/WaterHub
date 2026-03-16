@@ -2,14 +2,16 @@
 
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
-import { Trash2, Calendar, Droplets, CheckCircle2 } from "lucide-react"
+import { Trash2, Calendar, Droplets, CheckCircle2, XCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function HistoryPage() {
   const { logs, history, removeLog, goal } = useHydration()
 
+  // Sort dates descending (newest first)
   const sortedDates = Object.keys(history).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
   
+  // Sort individual logs descending
   const sortedLogs = [...logs].sort((a, b) => {
     const timeA = new Date(a.timestamp).getTime()
     const timeB = new Date(b.timestamp).getTime()
@@ -20,7 +22,7 @@ export default function HistoryPage() {
     <div className="space-y-8 max-w-lg mx-auto">
       <div className="space-y-1">
         <h1 className="text-3xl font-extrabold tracking-tight text-white">Intake History</h1>
-        <p className="text-muted-foreground font-medium">Review your hydration journey.</p>
+        <p className="text-muted-foreground font-medium">Review your hydration journey and goal completion.</p>
       </div>
 
       <div className="space-y-6">
@@ -44,12 +46,16 @@ export default function HistoryPage() {
                         <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{date}</p>
                         <div className="flex items-baseline gap-1">
                           <p className="text-2xl font-black text-primary">{totalAmount}</p>
-                          <p className="text-xs font-bold text-primary/60">ml total</p>
+                          <p className="text-xs font-bold text-primary/60">/ {goal} ml</p>
                         </div>
                       </div>
-                      {achieved && (
+                      {achieved ? (
                         <div className="bg-emerald-500/10 text-emerald-400 px-4 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Goal Met
+                        </div>
+                      ) : (
+                        <div className="bg-orange-500/10 text-orange-400 px-4 py-1.5 rounded-full flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider border border-orange-500/20 shadow-[0_0_15px_rgba(249,115,22,0.1)]">
+                          <XCircle className="w-3.5 h-3.5" /> Incomplete
                         </div>
                       )}
                     </CardContent>
