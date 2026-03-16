@@ -10,21 +10,21 @@
     --card-foreground: 204 40% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 204 40% 10%;
-    --primary: 200 80% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 204 20% 90%;
-    --secondary-foreground: 204 40% 20%;
-    --muted: 204 10% 90%;
-    --muted-foreground: 204 20% 40%;
-    --accent: 171 60% 40%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 186 40% 10%;
+    --secondary: 186 20% 90%;
+    --secondary-foreground: 186 40% 20%;
+    --muted: 186 10% 90%;
+    --muted-foreground: 186 20% 40%;
+    --accent: 186 100% 40%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 204 15% 85%;
-    --input: 204 15% 85%;
-    --ring: 200 80% 50%;
+    --border: 186 15% 85%;
+    --input: 186 15% 85%;
+    --ring: 186 100% 50%;
     --radius: 1rem;
-    --chart-1: 200 80% 50%;
+    --chart-1: 186 100% 50%;
     --chart-2: 171 60% 40%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
@@ -32,25 +32,25 @@
   }
 
   .dark {
-    --background: 204 40% 5%;
-    --foreground: 204 15% 95%;
-    --card: 204 40% 8%;
-    --card-foreground: 204 15% 95%;
-    --popover: 204 40% 8%;
-    --popover-foreground: 204 15% 95%;
-    --primary: 200 80% 50%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 204 20% 15%;
-    --secondary-foreground: 204 15% 95%;
-    --muted: 204 20% 15%;
-    --muted-foreground: 204 15% 65%;
-    --accent: 171 60% 40%;
+    --background: 186 40% 5%;
+    --foreground: 186 15% 95%;
+    --card: 186 40% 8%;
+    --card-foreground: 186 15% 95%;
+    --popover: 186 40% 8%;
+    --popover-foreground: 186 15% 95%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 186 40% 10%;
+    --secondary: 186 20% 15%;
+    --secondary-foreground: 186 15% 95%;
+    --muted: 186 20% 15%;
+    --muted-foreground: 186 15% 65%;
+    --accent: 186 100% 40%;
     --accent-foreground: 0 0% 100%;
     --destructive: 0 62% 30%;
-    --destructive-foreground: 204 15% 95%;
-    --border: 204 20% 15%;
-    --input: 204 20% 15%;
-    --ring: 200 80% 50%;
+    --destructive-foreground: 186 15% 95%;
+    --border: 186 20% 15%;
+    --input: 186 20% 15%;
+    --ring: 186 100% 50%;
   }
 }
 
@@ -75,7 +75,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(180deg, rgba(26, 162, 230, 0.2) 0%, rgba(26, 162, 230, 0.6) 100%);
+  background: linear-gradient(180deg, rgba(0, 229, 255, 0.2) 0%, rgba(0, 229, 255, 0.6) 100%);
   transform: translateY(100%);
   transition: transform 1s cubic-bezier(0.4, 0, 0.2, 1);
 }

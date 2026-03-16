@@ -14,7 +14,7 @@
 - **State Management:** React Context API with LocalStorage persistence
 
 ## Design Language
-- **Theme:** "Crystal Clear" - Use a primary blue (`hsl(200 80% 50%)`) and teal accents (`hsl(171 60% 40%)`).
+- **Theme:** "Crystal Clear" - Use a primary vibrant cyan (`#00E5FF`) and deeper teal accents.
 - **Visual Style:** 
   - Glassmorphism (semi-transparent backgrounds with backdrop blur).
   - Heavy use of rounded corners (`radius: 1rem` or higher).
