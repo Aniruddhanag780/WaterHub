@@ -50,7 +50,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[90vh] px-4">
-      <div className="w-full max-w-md bg-white rounded-[2rem] p-8 shadow-2xl text-black">
+      <div className="w-full max-w-md bg-white rounded-[2rem] p-8 shadow-2xl text-black border border-slate-100">
         <div className="text-center mb-8 space-y-2">
           <h1 className="text-3xl font-bold tracking-tight text-slate-900">
             {isSignUp ? "Create an Account" : "Welcome Back!"}
@@ -72,7 +72,7 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-slate-100 border-none text-slate-900 h-12 rounded-xl placeholder:text-slate-400 px-4"
+              className="bg-slate-50 border border-slate-200 text-slate-900 h-12 rounded-xl placeholder:text-slate-400 px-4 focus:border-slate-400 transition-colors"
             />
           </div>
           <div className="space-y-2">
@@ -84,7 +84,7 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-slate-100 border-none text-slate-900 h-12 rounded-xl placeholder:text-slate-400 px-4"
+              className="bg-slate-50 border border-slate-200 text-slate-900 h-12 rounded-xl placeholder:text-slate-400 px-4 focus:border-slate-400 transition-colors"
             />
             {!isSignUp && (
               <div className="text-right">
@@ -130,7 +130,7 @@ export default function LoginPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
             </svg>
-            Phone
+            Guest
           </Button>
         </div>
 
