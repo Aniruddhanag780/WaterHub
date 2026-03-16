@@ -122,7 +122,7 @@ export default function LoginPage() {
           </p>
         </div>
 
-        <form onSubmit={handleAuth} className="space-y-4">
+        <form onSubmit={handleAuth} className="space-y-6">
           <div className="space-y-1.5">
             <Label htmlFor="email" className="font-semibold text-sm">Email</Label>
             <Input 
@@ -136,14 +136,7 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="password" title="Password Label" className="font-semibold text-sm">Password</Label>
-              {!isSignUp && (
-                <Button variant="link" className="text-xs font-bold text-black p-0 h-auto hover:underline">
-                  Forgot password?
-                </Button>
-              )}
-            </div>
+            <Label htmlFor="password" title="Password Label" className="font-semibold text-sm">Password</Label>
             <Input 
               id="password" 
               type="password" 
@@ -153,6 +146,13 @@ export default function LoginPage() {
               required
               className="bg-[#f4f4f5] border border-[#f4f4f5] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
+            {!isSignUp && (
+              <div className="flex justify-end">
+                <Button variant="link" className="text-xs font-bold text-black p-0 h-auto hover:underline">
+                  Forgot password?
+                </Button>
+              </div>
+            )}
           </div>
           
           <Button 
