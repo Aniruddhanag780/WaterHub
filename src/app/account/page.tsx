@@ -101,6 +101,7 @@ export default function AccountPage() {
     setDriveLinked(false)
     setAutoSyncEnabled(false)
     setAccessToken(null)
+    addNotification('drive_disconnected', 'Google Drive Unlinked', 'completed')
     toast({
       title: "Service Disconnected",
       description: "Google Drive has been unlinked from your account.",

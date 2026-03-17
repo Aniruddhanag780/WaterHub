@@ -1,3 +1,4 @@
+
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react"
@@ -17,7 +18,7 @@ export type WaterLog = {
 
 export type AppNotification = {
   id: string
-  type: 'login' | 'logout' | 'drive_connected' | 'goal_updated' | 'hydration_reminder'
+  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'goal_updated' | 'hydration_reminder'
   title: string
   status: 'completed' | 'failed'
   timestamp: string
@@ -205,11 +206,9 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
         
-        // Deep beep: Base 180Hz, slightly increases pitch with intensity
         osc.type = 'sine'
         osc.frequency.setValueAtTime(180 + (intensity * 2), ctx.currentTime)
         
-        // Volume: Starts at 0.2, increases to 0.8 over time
         const volume = Math.min(0.2 + (intensity * 0.05), 0.8)
         gain.gain.setValueAtTime(0, ctx.currentTime)
         gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.1)
@@ -223,7 +222,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         
         intensity++
         
-        // Next beep happens faster over time
         const nextDelay = Math.max(2000 - (intensity * 100), 400)
         timeoutId = setTimeout(playBeep, nextDelay)
       } catch (err) {
@@ -336,14 +334,12 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     if (savedAutoSync) setLocalAutoSyncEnabled(savedAutoSync === "true")
     if (savedNotifications) setLocalNotifications(JSON.parse(savedNotifications))
 
-    // Restore access token from session storage if it exists
     const savedToken = sessionStorage.getItem("waterhub_access_token")
     if (savedToken) setAccessToken(savedToken)
     
     setIsHydrated(true)
   }, [])
 
-  // Persist access token to session storage when it changes
   useEffect(() => {
     if (accessToken) {
       sessionStorage.setItem("waterhub_access_token", accessToken)
