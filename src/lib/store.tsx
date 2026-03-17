@@ -1,9 +1,9 @@
 
 "use client"
 
-import React, { createContext, useContext, useEffect, useState, useRef } from "react"
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react"
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase"
-import { collection, doc, query, orderBy, getDoc } from "firebase/firestore"
+import { collection, doc, query, orderBy } from "firebase/firestore"
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 import { GoogleDriveService } from "@/lib/google-drive"
 import { useToast } from "@/hooks/use-toast"
@@ -73,7 +73,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [localDriveLinked, setLocalDriveLinked] = useState(false)
   const [localAutoSyncEnabled, setLocalAutoSyncEnabled] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
-  const [tick, setTick] = useState(0) // Used for midnight refresh
+  const [tick, setTick] = useState(0)
   const [currentDate, setCurrentDate] = useState<string>("")
   const [accessToken, setAccessToken] = useState<string | null>(null)
   
@@ -114,7 +114,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const { data: firestoreProfile, isLoading: isProfileLoading } = useDoc<any>(profileRef)
   const { data: firestoreReminders, isLoading: isRemindersLoading } = useDoc<any>(reminderRef)
 
-  // Derived Values
+  // Configuration & State Logic
   const logs = user ? (firestoreLogs || []) : localLogs
   const notifications = user ? (firestoreNotifications || []) : localNotifications
   const dailySummaries = user ? (firestoreSummaries || []) : []
@@ -123,7 +123,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
   const isAutoSyncEnabled = user ? (firestoreProfile?.isAutoSyncEnabled || false) : localAutoSyncEnabled
 
-  const syncLogsToDrive = async (tokenToUse: string) => {
+  const syncLogsToDrive = useCallback(async (tokenToUse: string) => {
     try {
       const backupData = {
         userId: user?.uid || 'guest',
@@ -138,63 +138,116 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       console.error("Backup failed", error)
       return false
     }
-  }
+  }, [user, logs, goal, reminders])
 
-  // Alarm Trigger Logic
+  const setReminders = useCallback((times: string[]) => {
+    const sortedTimes = [...times].sort((a, b) => {
+      return new Date(`2000/01/01 ${a}`).getTime() - new Date(`2000/01/01 ${b}`).getTime()
+    })
+    if (user && db && reminderRef) {
+      setDocumentNonBlocking(reminderRef, {
+        optimalReminderTimes: sortedTimes,
+        userId: user.uid,
+        isEnabled: true,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
+    } else {
+      setLocalReminders(sortedTimes)
+      localStorage.setItem("hydrotrack_reminders", JSON.stringify(sortedTimes))
+    }
+  }, [user, db, reminderRef])
+
+  const addNotification = useCallback((type: AppNotification['type'], title: string, status: AppNotification['status']) => {
+    const timestamp = new Date().toISOString()
+    if (user && db) {
+      const colRef = collection(db, "users", user.uid, "notifications")
+      addDocumentNonBlocking(colRef, {
+        userId: user.uid,
+        type,
+        title,
+        status,
+        timestamp
+      })
+    } else {
+      const newNotif: AppNotification = {
+        id: Math.random().toString(36).substring(7),
+        type,
+        title,
+        status,
+        timestamp,
+      }
+      setLocalNotifications(prev => [newNotif, ...prev])
+      localStorage.setItem("hydrotrack_notifications", JSON.stringify([newNotif, ...notifications]))
+    }
+  }, [user, db, notifications])
+
+  // Alarm Trigger & Auto-Delete Logic
   useEffect(() => {
     const playAlarmSound = () => {
       try {
-        // Subtle water droplet/bubble sound
         const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
-        audio.play().catch(() => {
-          // Ignore audio errors (usually blocked by browser until user interacts)
-        })
-      } catch (e) {
-        // Fallback or ignore
-      }
+        audio.play().catch(() => {})
+      } catch (e) {}
     }
 
     const checkAlarms = () => {
-      const now = new Date()
-      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
-      
-      // If we already triggered for this specific minute, skip
-      if (lastTriggeredTimeRef.current === timeStr) return
+      if (reminders.length === 0) return
 
-      const matchingReminder = reminders.find(r => {
-        // Handle potential formatting differences (padding hours)
+      const now = new Date()
+      const nowTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+      
+      const expiredReminders: string[] = []
+      let triggerFound = false
+      let triggeredReminderStr = ""
+
+      reminders.forEach(r => {
+        // Robust time parsing for comparison
         const [rTime, rPeriod] = r.split(' ')
         const [rHour, rMin] = rTime.split(':')
         const paddedR = `${rHour.padStart(2, '0')}:${rMin} ${rPeriod}`
         
-        const [cTime, cPeriod] = timeStr.split(' ')
-        const [cHour, cMin] = cTime.split(':')
-        const paddedC = `${cHour.padStart(2, '0')}:${cMin} ${cPeriod}`
-        
-        return paddedR === paddedC
+        const [nowT, nowP] = nowTimeStr.split(' ')
+        const [nowH, nowM] = nowT.split(':')
+        const paddedNow = `${nowH.padStart(2, '0')}:${nowM} ${nowP}`
+
+        const rDate = new Date(`2000/01/01 ${paddedR}`)
+        const nDate = new Date(`2000/01/01 ${paddedNow}`)
+
+        // If the current time is exactly the reminder time or in the past
+        if (nDate >= rDate) {
+          expiredReminders.push(r)
+          
+          // Trigger alert only on exact match and if not triggered this minute
+          if (paddedR === paddedNow && lastTriggeredTimeRef.current !== nowTimeStr) {
+            triggerFound = true
+            triggeredReminderStr = r
+          }
+        }
       })
 
-      if (matchingReminder) {
-        lastTriggeredTimeRef.current = timeStr
-        
-        // Play sound
+      if (triggerFound) {
+        lastTriggeredTimeRef.current = nowTimeStr
         playAlarmSound()
-
         toast({
           title: "💧 Time to Hydrate!",
-          description: `Scheduled reminder at ${matchingReminder}. Let's hit that goal!`,
+          description: `Scheduled reminder at ${triggeredReminderStr}. Let's hit that goal!`,
           duration: 10000,
         })
-        
-        addNotification('hydration_reminder', `Hydration Alert: ${matchingReminder}`, 'completed')
+        addNotification('hydration_reminder', `Hydration Alert: ${triggeredReminderStr}`, 'completed')
+      }
+
+      // Auto-delete expired/triggered alarms
+      if (expiredReminders.length > 0) {
+        const remaining = reminders.filter(r => !expiredReminders.includes(r))
+        setReminders(remaining)
       }
     }
 
-    const interval = setInterval(checkAlarms, 30000) // Check every 30 seconds
+    const interval = setInterval(checkAlarms, 30000)
     return () => clearInterval(interval)
-  }, [reminders, toast])
+  }, [reminders, toast, addNotification, setReminders])
 
-  // Midnight Refresh & Auto-Sync Logic
+  // Midnight Refresh Logic
   useEffect(() => {
     const today = new Date().toLocaleDateString()
     setCurrentDate(today)
@@ -204,18 +257,10 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     const msToMidnight = midnight.getTime() - now.getTime()
 
     const timeout = setTimeout(async () => {
-      // 1. Perform Auto-Sync if enabled before refreshing
       if (isAutoSyncEnabled && accessToken) {
-        const success = await syncLogsToDrive(accessToken)
-        if (success) {
-          toast({
-            title: "Cloud Backup Complete",
-            description: "Your data was automatically saved to Google Drive at midnight.",
-          })
-        }
+        await syncLogsToDrive(accessToken)
       }
 
-      // 2. Refresh Date
       const nextDate = new Date().toLocaleDateString()
       setCurrentDate(nextDate)
       setTick(prev => prev + 1)
@@ -226,7 +271,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     }, msToMidnight + 100)
 
     return () => clearTimeout(timeout)
-  }, [tick, toast, isAutoSyncEnabled, accessToken])
+  }, [tick, toast, isAutoSyncEnabled, accessToken, syncLogsToDrive])
 
   // Local Storage Hydration
   useEffect(() => {
@@ -311,6 +356,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         timestamp,
       }
       setLocalLogs((prev) => [...prev, newLog])
+      localStorage.setItem("hydrotrack_logs", JSON.stringify([...localLogs, newLog]))
     }
   }
 
@@ -326,30 +372,9 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       deleteDocumentNonBlocking(docRef)
       updateDailySummary(dateStr, -amount)
     } else {
-      setLocalLogs((prev) => prev.filter((log) => log.id !== id))
-    }
-  }
-
-  const addNotification = (type: AppNotification['type'], title: string, status: AppNotification['status']) => {
-    const timestamp = new Date().toISOString()
-    if (user && db) {
-      const colRef = collection(db, "users", user.uid, "notifications")
-      addDocumentNonBlocking(colRef, {
-        userId: user.uid,
-        type,
-        title,
-        status,
-        timestamp
-      })
-    } else {
-      const newNotif: AppNotification = {
-        id: Math.random().toString(36).substring(7),
-        type,
-        title,
-        status,
-        timestamp,
-      }
-      setLocalNotifications(prev => [newNotif, ...prev])
+      const remaining = localLogs.filter((log) => log.id !== id)
+      setLocalLogs(remaining)
+      localStorage.setItem("hydrotrack_logs", JSON.stringify(remaining))
     }
   }
 
@@ -363,22 +388,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       addNotification('goal_updated', `Goal set to ${amount}ml`, 'completed')
     } else {
       setLocalGoal(amount)
-    }
-  }
-
-  const setReminders = (times: string[]) => {
-    const sortedTimes = [...times].sort((a, b) => {
-      return new Date(`2000/01/01 ${a}`).getTime() - new Date(`2000/01/01 ${b}`).getTime()
-    })
-    if (user && db && reminderRef) {
-      setDocumentNonBlocking(reminderRef, {
-        optimalReminderTimes: sortedTimes,
-        userId: user.uid,
-        isEnabled: true,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true })
-    } else {
-      setLocalReminders(sortedTimes)
+      localStorage.setItem("hydrotrack_goal", amount.toString())
     }
   }
 
@@ -391,6 +401,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       }, { merge: true })
     } else {
       setLocalDriveLinked(linked)
+      localStorage.setItem("hydrotrack_drive_linked", linked.toString())
     }
   }
 
@@ -403,6 +414,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       }, { merge: true })
     } else {
       setLocalAutoSyncEnabled(enabled)
+      localStorage.setItem("hydrotrack_auto_sync", enabled.toString())
     }
   }
 
@@ -414,7 +426,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     })
     .reduce((acc, curr) => acc + (curr.amountMl ?? curr.amount ?? 0), 0)
 
-  const history: Record<string, number> = logs.reduce((acc, log) => {
+  const historyMap: Record<string, number> = logs.reduce((acc, log) => {
     const amount = log.amountMl ?? log.amount ?? 0
     const logDate = log.timestamp ? new Date(log.timestamp) : new Date()
     const date = logDate.toLocaleDateString()
@@ -428,7 +440,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     
     while (true) {
       const dateKey = checkDate.toLocaleDateString()
-      const totalForDay = history[dateKey] || 0
+      const totalForDay = historyMap[dateKey] || 0
       
       if (totalForDay >= goal) {
         currentStreak++
@@ -443,7 +455,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       if (currentStreak > 1000) break
     }
     return currentStreak
-  }, [history, goal])
+  }, [historyMap, goal])
 
   return (
     <HydrationContext.Provider
@@ -481,7 +493,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         },
         todayTotal,
         streak,
-        history,
+        history: historyMap,
         isLoading,
         currentDate,
       }}
