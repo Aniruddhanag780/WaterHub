@@ -1,7 +1,7 @@
-# HydroTrack - Master App Specification
+# WaterHub - Master App Specification
 
 ## Core Identity
-**Name:** HydroTrack
+**Name:** WaterHub
 **Purpose:** A premium, intelligent water tracking application that uses AI to optimize hydration schedules based on user routines.
 **Target Audience:** Health-conscious individuals and busy professionals.
 

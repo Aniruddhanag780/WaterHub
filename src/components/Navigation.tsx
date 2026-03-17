@@ -1,4 +1,3 @@
-
 "use client"
 
 import Link from "next/link"
@@ -29,7 +28,7 @@ export function Navigation() {
         <div className="p-2.5 bg-primary/10 rounded-2xl transition-all group-hover:scale-110 group-hover:bg-primary/20">
           <Droplet className="w-6 h-6 fill-current" />
         </div>
-        <span className="text-2xl font-black tracking-tight text-white uppercase italic">HydroTrack</span>
+        <span className="text-2xl font-black tracking-tight text-white uppercase italic">WaterHub</span>
       </div>
       
       {/* Navigation Links - Perfect Distribution */}

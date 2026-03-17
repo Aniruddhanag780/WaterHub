@@ -173,7 +173,7 @@ export default function AccountPage() {
                   )}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-bold text-lg text-white">{user.displayName || "HydroTrack User"}</h4>
+                  <h4 className="font-bold text-lg text-white">{user.displayName || "WaterHub User"}</h4>
                   <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
                     <Mail className="w-3.5 h-3.5" /> {user.email}
                   </div>

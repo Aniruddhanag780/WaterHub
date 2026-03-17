@@ -188,7 +188,7 @@ export default function LoginPage() {
           </h1>
           <p className="text-muted-foreground text-sm px-4 font-medium">
             {isSignUp 
-              ? "Join HydroTrack to start your intelligent hydration journey." 
+              ? "Join WaterHub to start your intelligent hydration journey." 
               : "Please enter your email below to sign in to your account."}
           </p>
         </div>
@@ -311,6 +311,7 @@ export default function LoginPage() {
           <div className="flex items-center justify-center gap-1 text-sm text-muted-foreground font-medium">
             <span>{isSignUp ? "Already have an account?" : "Don't have an account?"}</span>
             <Button 
+              type="button"
               variant="link" 
               className="text-black font-medium p-0 h-auto text-sm underline hover:text-black/70 transition-colors" 
               onClick={() => setIsSignUp(!isSignUp)}

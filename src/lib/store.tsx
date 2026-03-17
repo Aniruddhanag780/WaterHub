@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react"
@@ -136,7 +135,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         goal,
         reminders
       }
-      await GoogleDriveService.uploadBackup(tokenToUse, `hydrotrack_backup_${new Date().toISOString().split('T')[0]}.json`, backupData)
+      await GoogleDriveService.uploadBackup(tokenToUse, `waterhub_backup_${new Date().toISOString().split('T')[0]}.json`, backupData)
       return true
     } catch (error: any) {
       console.error("Backup failed", error)

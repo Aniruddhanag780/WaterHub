@@ -1,5 +1,5 @@
 
-# HydroTrack - Smart Hydration Tracker
+# WaterHub - Smart Hydration Tracker
 
 This is a premium, intelligent water tracking application built with Next.js 15, Firebase, and Genkit.
 

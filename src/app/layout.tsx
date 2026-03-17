@@ -6,7 +6,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from '@/components/ui/toaster';
 
 export const metadata: Metadata = {
-  title: 'HydroTrack - Smart Hydration Tracker',
+  title: 'WaterHub - Smart Hydration Tracker',
   description: 'Track your daily water intake with intelligent reminders and visualizations.',
 };
 
