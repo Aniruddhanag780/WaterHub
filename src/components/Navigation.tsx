@@ -18,7 +18,8 @@ export function Navigation() {
     { label: "Home", href: "/", icon: Home },
     { label: "History", href: "/history", icon: History },
     { label: "AI Suggestion", href: "/reminders", icon: Sparkles },
-    { label: "Account", href: "/settings", icon: UserCircle },
+    { label: "Settings", href: "/settings", icon: Settings },
+    { label: "Account", href: "/account", icon: UserCircle },
   ]
 
   return (
