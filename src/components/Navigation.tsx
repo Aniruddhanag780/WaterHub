@@ -3,7 +3,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Droplet, History, Settings, Home, LogIn, LogOut, Sparkles, UserCircle } from "lucide-react"
+import { Droplet, History, Settings, Home, LogOut, Sparkles, UserCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser, useAuth } from "@/firebase"
 import { Button } from "@/components/ui/button"
@@ -30,6 +30,11 @@ export function Navigation() {
   const initials = user?.displayName
     ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
     : user?.email?.[0]?.toUpperCase() || 'U'
+
+  // If the user is on the login page, we might want a simpler navigation or none at all
+  const isLoginPage = pathname === "/login"
+
+  if (isLoginPage) return null
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-t border-white/10 flex justify-around items-center h-16 px-4 md:relative md:border-t-0 md:bg-transparent md:h-20">
@@ -60,19 +65,19 @@ export function Navigation() {
 
         <div className="h-8 w-[1px] bg-white/10 mx-2 hidden md:block" />
 
-        {user ? (
+        {user && (
           <div className="flex items-center gap-3">
-            <div className="hidden md:flex flex-col items-end mr-1">
-              <span className="text-xs font-bold text-white leading-tight truncate max-w-[100px]">
-                {user.displayName || "User"}
-              </span>
-              <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-                {user.isAnonymous ? "Guest Account" : "Verified"}
-              </span>
-            </div>
-            
-            <Link href="/settings" className="flex items-center gap-2">
-              <Avatar className="h-9 w-9 border-2 border-primary/20 hover:border-primary transition-all">
+            <Link href="/settings" className="flex items-center gap-3 group">
+              <div className="hidden lg:flex flex-col items-end">
+                <span className="text-xs font-bold text-white leading-tight group-hover:text-primary transition-colors">
+                  Account
+                </span>
+                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+                  {user.displayName || "View Profile"}
+                </span>
+              </div>
+              
+              <Avatar className="h-9 w-9 border-2 border-primary/20 group-hover:border-primary transition-all">
                 <AvatarImage src={user.photoURL || undefined} />
                 <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
                   {initials}
@@ -90,17 +95,6 @@ export function Navigation() {
               <LogOut className="w-5 h-5" />
             </Button>
           </div>
-        ) : (
-          <Link href="/login">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl h-10 w-10"
-              title="Sign In"
-            >
-              <LogIn className="w-5 h-5" />
-            </Button>
-          </Link>
         )}
       </div>
     </nav>
