@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect } from "react"
@@ -8,7 +7,7 @@ import { WaterProgress } from "@/components/WaterProgress"
 import { WaterLogger } from "@/components/WaterLogger"
 import { Card, CardContent } from "@/components/ui/card"
 import { useHydration } from "@/lib/store"
-import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert } from "lucide-react"
+import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert, Cloud } from "lucide-react"
 import {
   Popover,
   PopoverContent,
@@ -50,6 +49,17 @@ export default function Home() {
     if (!currentDate) return false
     return new Date(n.timestamp).toLocaleDateString() === currentDate
   })
+
+  const getIconForType = (type: string) => {
+    switch (type) {
+      case 'drive_sync':
+      case 'drive_connected':
+      case 'drive_disconnected':
+        return <Cloud className="w-4 h-4" />
+      default:
+        return <CheckCircle2 className="w-4 h-4" />
+    }
+  }
 
   return (
     <div className="space-y-8 max-w-lg mx-auto">
@@ -98,8 +108,8 @@ export default function Home() {
             </PopoverTrigger>
             <PopoverContent className="w-80 p-0 rounded-3xl border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl mr-4" align="end">
               <div className="p-4 border-b border-white/5">
-                <h3 className="font-bold text-lg text-white">System Activities</h3>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Done Today</p>
+                <h3 className="font-bold text-lg text-white">Activity Feed</h3>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">System & Cloud Status</p>
               </div>
               <ScrollArea className="max-h-[350px]">
                 <div className="p-2 space-y-1">
@@ -113,8 +123,11 @@ export default function Home() {
                   ) : (
                     todayNotifications.map((notif) => (
                       <div key={notif.id} className="p-3 rounded-2xl hover:bg-white/5 flex gap-3 group transition-colors">
-                        <div className={notif.status === 'completed' ? "text-primary" : "text-destructive"}>
-                          {notif.status === 'completed' ? <CheckCircle2 className="w-5 h-5" /> : <XCircle className="w-5 h-5" />}
+                        <div className={cn(
+                          "shrink-0 p-1.5 rounded-lg",
+                          notif.status === 'completed' ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
+                        )}>
+                          {getIconForType(notif.type)}
                         </div>
                         <div className="space-y-1 flex-1">
                           <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">{notif.title}</p>

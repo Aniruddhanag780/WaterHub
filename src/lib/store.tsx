@@ -1,4 +1,3 @@
-
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react"
@@ -18,7 +17,7 @@ export type WaterLog = {
 
 export type AppNotification = {
   id: string
-  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'goal_updated' | 'hydration_reminder'
+  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder'
   title: string
   status: 'completed' | 'failed'
   timestamp: string
@@ -127,40 +126,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
   const isAutoSyncEnabled = user ? (firestoreProfile?.isAutoSyncEnabled || false) : localAutoSyncEnabled
 
-  const syncLogsToDrive = useCallback(async (tokenToUse: string) => {
-    try {
-      const backupData = {
-        userId: user?.uid || 'guest',
-        backupDate: new Date().toISOString(),
-        logs,
-        goal,
-        reminders
-      }
-      await GoogleDriveService.uploadBackup(tokenToUse, `waterhub_backup_${new Date().toISOString().split('T')[0]}.json`, backupData)
-      return true
-    } catch (error: any) {
-      console.error("Backup failed", error)
-      return false
-    }
-  }, [user, logs, goal, reminders])
-
-  const setReminders = useCallback((times: string[]) => {
-    const sortedTimes = [...times].sort((a, b) => {
-      return new Date(`2000/01/01 ${a}`).getTime() - new Date(`2000/01/01 ${b}`).getTime()
-    })
-    if (user && db && reminderRef) {
-      setDocumentNonBlocking(reminderRef, {
-        optimalReminderTimes: sortedTimes,
-        userId: user.uid,
-        isEnabled: true,
-        updatedAt: new Date().toISOString(),
-      }, { merge: true })
-    } else {
-      setLocalReminders(sortedTimes)
-      localStorage.setItem("hydrotrack_reminders", JSON.stringify(sortedTimes))
-    }
-  }, [user, db, reminderRef])
-
   const addNotification = useCallback((type: AppNotification['type'], title: string, status: AppNotification['status']) => {
     const timestamp = new Date().toISOString()
     if (user && db) {
@@ -184,6 +149,42 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("hydrotrack_notifications", JSON.stringify([newNotif, ...notifications]))
     }
   }, [user, db, notifications])
+
+  const syncLogsToDrive = useCallback(async (tokenToUse: string) => {
+    try {
+      const backupData = {
+        userId: user?.uid || 'guest',
+        backupDate: new Date().toISOString(),
+        logs,
+        goal,
+        reminders
+      }
+      await GoogleDriveService.uploadBackup(tokenToUse, `waterhub_backup_${new Date().toISOString().split('T')[0]}.json`, backupData)
+      addNotification('drive_sync', 'Cloud Backup Complete', 'completed')
+      return true
+    } catch (error: any) {
+      console.error("Backup failed", error)
+      addNotification('drive_sync', 'Cloud Backup Attempt', 'failed')
+      return false
+    }
+  }, [user, logs, goal, reminders, addNotification])
+
+  const setReminders = useCallback((times: string[]) => {
+    const sortedTimes = [...times].sort((a, b) => {
+      return new Date(`2000/01/01 ${a}`).getTime() - new Date(`2000/01/01 ${b}`).getTime()
+    })
+    if (user && db && reminderRef) {
+      setDocumentNonBlocking(reminderRef, {
+        optimalReminderTimes: sortedTimes,
+        userId: user.uid,
+        isEnabled: true,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
+    } else {
+      setLocalReminders(sortedTimes)
+      localStorage.setItem("hydrotrack_reminders", JSON.stringify(sortedTimes))
+    }
+  }, [user, db, reminderRef])
 
   const stopAlarm = useCallback(() => {
     setIsRinging(false)
