@@ -16,15 +16,10 @@ service cloud.firestore {
      * - /users/{userId}/reminderSetting/reminderSetting: A 1:1 sub-document for notification preferences.
      * - /users/{userId}/waterIntakes/{id}: A collection of hydration logs.
      * - /users/{userId}/dailySummaries/{id}: A collection of aggregated daily stats.
+     * - /users/{userId}/notifications/{id}: A collection of system activity logs.
      *
      * Key Security Decisions:
-     * - Authorization Independence: Documents in subcollections (waterIntakes, dailySummaries) 
-     *   contain a denormalized 'userId' field. This allows rules to verify ownership by 
-     *   comparing the auth UID to both the path segment and the internal field, preventing 
-     *   cross-user data injection.
-     * - Prototyping Flexibility: These rules focus exclusively on identity-based authorization 
-     *   and relational integrity (matching UIDs). They do not enforce strict schema types 
-     *   (strings, numbers) to allow for rapid frontend iteration.
+     * - Authorization Independence: Documents in subcollections contain a denormalized 'userId' field.
      * - Strict Ownership: No public reading or listing is permitted. Users can only access 
      *   their own data tree.
      */
@@ -50,10 +45,6 @@ service cloud.firestore {
 
     /**
      * @description Rules for the root User document.
-     * @path /users/{userId}
-     * @allow (create) User 'abc' creates document /users/abc where data.id == 'abc'.
-     * @deny (create) User 'abc' attempts to create document /users/xyz.
-     * @principle Ownership and Self-Creation.
      */
     match /users/{userId} {
       allow get, list: if isOwner(userId);
@@ -64,10 +55,6 @@ service cloud.firestore {
 
     /**
      * @description Rules for the 1:1 UserProfile document.
-     * @path /users/{userId}/profile/profile
-     * @allow (get) User 'abc' retrieves their profile.
-     * @deny (update) User 'abc' attempts to change the 'userId' field of the profile.
-     * @principle Relational integrity and path-based ownership.
      */
     match /users/{userId}/profile/profile {
       allow get, list: if isOwner(userId);
@@ -78,10 +65,6 @@ service cloud.firestore {
 
     /**
      * @description Rules for logging water intake records.
-     * @path /users/{userId}/waterIntakes/{waterIntakeId}
-     * @allow (list) User 'abc' queries their own water intake history.
-     * @deny (create) User 'abc' attempts to log water for user 'xyz'.
-     * @principle Ownership validation via path and denormalized field.
      */
     match /users/{userId}/waterIntakes/{waterIntakeId} {
       allow get, list: if isOwner(userId);
@@ -92,10 +75,6 @@ service cloud.firestore {
 
     /**
      * @description Rules for the 1:1 ReminderSetting document.
-     * @path /users/{userId}/reminderSetting/reminderSetting
-     * @allow (update) User 'abc' toggles their own reminders.
-     * @deny (delete) Anonymous user attempts to delete a reminder setting.
-     * @principle Immutable ownership field and path-based access control.
      */
     match /users/{userId}/reminderSetting/reminderSetting {
       allow get, list: if isOwner(userId);
@@ -106,12 +85,18 @@ service cloud.firestore {
 
     /**
      * @description Rules for the DailySummary collection.
-     * @path /users/{userId}/dailySummaries/{dailySummaryId}
-     * @allow (get) User 'abc' views their summary for '2023-10-27'.
-     * @deny (update) User 'abc' attempts to change the 'userId' associated with a summary.
-     * @principle Consistency between authentication state, path segments, and document data.
      */
     match /users/{userId}/dailySummaries/{dailySummaryId} {
+      allow get, list: if isOwner(userId);
+      allow create: if isOwner(userId) && request.resource.data.userId == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for the AppNotifications collection.
+     */
+    match /users/{userId}/notifications/{notificationId} {
       allow get, list: if isOwner(userId);
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
