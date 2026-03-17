@@ -18,7 +18,7 @@ export type WaterLog = {
 
 export type AppNotification = {
   id: string
-  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder' | 'water_added' | 'water_removed' | 'reminders_updated'
+  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder' | 'water_added' | 'water_removed' | 'reminders_updated' | 'hydration_reminder_triggered'
   title: string
   status: 'completed' | 'failed'
   timestamp: string
@@ -194,7 +194,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     setIsRinging(false)
   }, [])
 
-  // Procedural Deep Beep Logic
+  // Procedural Deep Beep Logic with increasing intensity
   useEffect(() => {
     let timeoutId: NodeJS.Timeout
     let intensity = 0
@@ -208,29 +208,42 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         }
         
         const ctx = audioContextRef.current
+        // If context is suspended (common browser behavior), resume it
+        if (ctx.state === 'suspended') {
+          ctx.resume()
+        }
+
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
         
+        // Deep base frequency (150Hz) that increases slightly with intensity
         osc.type = 'sine'
-        osc.frequency.setValueAtTime(180 + (intensity * 2), ctx.currentTime)
+        const baseFreq = 150
+        osc.frequency.setValueAtTime(baseFreq + (intensity * 5), ctx.currentTime)
         
-        const volume = Math.min(0.2 + (intensity * 0.05), 0.8)
+        // Volume increases with intensity
+        const volume = Math.min(0.2 + (intensity * 0.08), 0.9)
+        
+        // Envelope: Quick attack, slight hold, exponential decay
         gain.gain.setValueAtTime(0, ctx.currentTime)
         gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.1)
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6)
+        gain.gain.setValueAtTime(volume, ctx.currentTime + 0.3)
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.8)
         
         osc.connect(gain)
         gain.connect(ctx.destination)
         
         osc.start()
-        osc.stop(ctx.currentTime + 0.7)
+        osc.stop(ctx.currentTime + 0.9)
         
         intensity++
         
-        const nextDelay = Math.max(2000 - (intensity * 100), 400)
+        // Beep frequency (speed) increases with intensity
+        // Starts at 2.5s intervals, accelerates down to 0.4s
+        const nextDelay = Math.max(2500 - (intensity * 150), 400)
         timeoutId = setTimeout(playBeep, nextDelay)
       } catch (err) {
-        console.error("Audio trigger failed", err)
+        console.warn("Audio trigger failed - likely waiting for user interaction", err)
       }
     }
 
@@ -256,6 +269,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       let triggeredReminderStr = ""
 
       reminders.forEach(r => {
+        // Ensure standard comparison format
         const [rTime, rPeriod] = r.split(' ')
         const [rHour, rMin] = rTime.split(':')
         const paddedR = `${rHour.padStart(2, '0')}:${rMin} ${rPeriod}`
@@ -269,6 +283,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
         if (nDate >= rDate) {
           expiredReminders.push(r)
+          // Only ring if it's EXACTLY the time and we haven't triggered for this minute yet
           if (paddedR === paddedNow && lastTriggeredTimeRef.current !== nowTimeStr) {
             triggerFound = true
             triggeredReminderStr = r
@@ -282,18 +297,21 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         toast({
           title: "💧 Time to Hydrate!",
           description: `Scheduled reminder at ${triggeredReminderStr}. Let's hit that goal!`,
-          duration: 20000,
+          duration: 30000,
         })
         addNotification('hydration_reminder', `Hydration Alert: ${triggeredReminderStr}`, 'completed')
       }
 
-      if (expiredReminders.length > 0) {
+      // Automatically clean up past reminders that didn't trigger (e.g. app was closed)
+      if (expiredReminders.length > 0 && !triggerFound) {
         const remaining = reminders.filter(r => !expiredReminders.includes(r))
-        setReminders(remaining)
+        if (remaining.length !== reminders.length) {
+          setReminders(remaining)
+        }
       }
     }
 
-    const interval = setInterval(checkAlarms, 15000)
+    const interval = setInterval(checkAlarms, 10000) // Check every 10 seconds
     return () => clearInterval(interval)
   }, [reminders, toast, addNotification, setReminders, isRinging])
 
@@ -471,7 +489,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     } else {
       setLocalDriveLinked(linked)
       localStorage.setItem("hydrotrack_drive_linked", linked.toString())
-      addNotification(linked ? 'drive_connected' : 'drive_connected (local)', linked ? 'Cloud service connected' : 'Cloud service disconnected', 'completed')
+      addNotification(linked ? 'drive_connected' : 'drive_disconnected', linked ? 'Cloud service connected' : 'Cloud service disconnected', 'completed')
     }
   }
 
