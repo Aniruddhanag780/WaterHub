@@ -28,12 +28,13 @@ type HydrationContextType = {
   todayTotal: number
   streak: number
   history: Record<string, number>
+  isLoading: boolean
 }
 
 const HydrationContext = createContext<HydrationContextType | undefined>(undefined)
 
 export function HydrationProvider({ children }: { children: React.ReactNode }) {
-  const { user } = useUser()
+  const { user, isUserLoading } = useUser()
   const db = useFirestore()
   const { toast } = useToast()
 
@@ -43,7 +44,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [localReminders, setLocalReminders] = useState<string[]>([])
   const [isHydrated, setIsHydrated] = useState(false)
 
-  // Firestore Data
+  // Firestore Data References
   const logsQuery = useMemoFirebase(() => {
     if (!db || !user) return null
     return collection(db, "users", user.uid, "waterIntakes")
@@ -59,11 +60,12 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     return doc(db, "users", user.uid, "reminderSetting", "reminderSetting")
   }, [db, user])
 
-  const { data: firestoreLogs } = useCollection<WaterLog>(logsQuery)
-  const { data: firestoreProfile } = useDoc<any>(profileRef)
-  const { data: firestoreReminders } = useDoc<any>(reminderRef)
+  // Subscriptions
+  const { data: firestoreLogs, isLoading: isLogsLoading } = useCollection<WaterLog>(logsQuery)
+  const { data: firestoreProfile, isLoading: isProfileLoading } = useDoc<any>(profileRef)
+  const { data: firestoreReminders, isLoading: isRemindersLoading } = useDoc<any>(reminderRef)
 
-  // Load from localStorage on mount
+  // Load from localStorage on mount (Guest Data)
   useEffect(() => {
     const savedLogs = localStorage.getItem("hydrotrack_logs")
     const savedGoal = localStorage.getItem("hydrotrack_goal")
@@ -74,7 +76,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     setIsHydrated(true)
   }, [])
 
-  // Persist guest data to localStorage (only if not logged in)
+  // Persist guest data to localStorage
   useEffect(() => {
     if (isHydrated && !user) {
       localStorage.setItem("hydrotrack_logs", JSON.stringify(localLogs))
@@ -83,10 +85,10 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     }
   }, [localLogs, localGoal, localReminders, isHydrated, user])
 
-  // Migration Logic: Move guest data to account on login
+  // User Initialization & Migration Logic
   useEffect(() => {
-    if (user && isHydrated && db && (localLogs.length > 0 || localGoal !== 2500 || localReminders.length > 0)) {
-      // 1. Ensure User Document exists
+    if (user && isHydrated && db) {
+      // 1. Ensure root user document exists
       const userRef = doc(db, "users", user.uid)
       setDocumentNonBlocking(userRef, {
         id: user.uid,
@@ -97,68 +99,87 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString()
       }, { merge: true })
 
-      // 2. Migrate Logs
-      localLogs.forEach(log => {
-        const colRef = collection(db, "users", user.uid, "waterIntakes")
-        addDocumentNonBlocking(colRef, {
-          amountMl: log.amountMl ?? log.amount,
-          timestamp: new Date(log.timestamp).toISOString(),
-          userId: user.uid,
-          source: 'migrated',
-          createdAt: new Date().toISOString()
+      // 2. Perform Migration if local data exists
+      if (localLogs.length > 0 || localGoal !== 2500 || localReminders.length > 0) {
+        // Migrate Logs
+        localLogs.forEach(log => {
+          const colRef = collection(db, "users", user.uid, "waterIntakes")
+          addDocumentNonBlocking(colRef, {
+            amountMl: log.amountMl ?? log.amount,
+            timestamp: new Date(log.timestamp).toISOString(),
+            userId: user.uid,
+            source: 'migrated',
+            createdAt: new Date().toISOString()
+          })
         })
-      })
 
-      // 3. Migrate Goal/Profile
-      if (localGoal !== 2500) {
-        const pRef = doc(db, "users", user.uid, "profile", "profile")
-        setDocumentNonBlocking(pRef, {
-          dailyGoalMl: localGoal,
+        // Migrate Goal/Profile
+        if (localGoal !== 2500) {
+          const pRef = doc(db, "users", user.uid, "profile", "profile")
+          setDocumentNonBlocking(pRef, {
+            dailyGoalMl: localGoal,
+            userId: user.uid,
+            preferredUnit: 'ml',
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            id: 'profile',
+            wakeUpTime: "07:00",
+            sleepTime: "22:00"
+          }, { merge: true })
+        }
+
+        // Migrate Reminders
+        if (localReminders.length > 0) {
+          const rRef = doc(db, "users", user.uid, "reminderSetting", "reminderSetting")
+          setDocumentNonBlocking(rRef, {
+            optimalReminderTimes: localReminders,
+            userId: user.uid,
+            isEnabled: true,
+            updatedAt: new Date().toISOString(),
+            createdAt: new Date().toISOString(),
+            id: 'reminderSetting',
+            frequencyMinutes: 60,
+            silentHoursStart: "22:00",
+            silentHoursEnd: "07:00",
+            reminderMessage: "Time to drink water!",
+            smartRemindersEnabled: true
+          }, { merge: true })
+        }
+
+        // Clear local storage after migration
+        setLocalLogs([])
+        setLocalGoal(2500)
+        setLocalReminders([])
+        localStorage.removeItem("hydrotrack_logs")
+        localStorage.removeItem("hydrotrack_goal")
+        localStorage.removeItem("hydrotrack_reminders")
+        
+        toast({
+          title: "Account Synced",
+          description: "Your data has been successfully moved to your account.",
+        })
+      } 
+      // 3. If no profile exists and we aren't migrating, initialize a default one
+      else if (!isProfileLoading && !firestoreProfile && user) {
+        setDocumentNonBlocking(profileRef!, {
+          dailyGoalMl: 2500,
           userId: user.uid,
           preferredUnit: 'ml',
           updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
           id: 'profile',
           wakeUpTime: "07:00",
           sleepTime: "22:00"
         }, { merge: true })
       }
-
-      // 4. Migrate Reminders
-      if (localReminders.length > 0) {
-        const rRef = doc(db, "users", user.uid, "reminderSetting", "reminderSetting")
-        setDocumentNonBlocking(rRef, {
-          optimalReminderTimes: localReminders,
-          userId: user.uid,
-          isEnabled: true,
-          updatedAt: new Date().toISOString(),
-          id: 'reminderSetting',
-          frequencyMinutes: 60,
-          silentHoursStart: "22:00",
-          silentHoursEnd: "07:00",
-          reminderMessage: "Time to drink water!",
-          smartRemindersEnabled: true
-        }, { merge: true })
-      }
-
-      // Clear local state and storage
-      setLocalLogs([])
-      setLocalGoal(2500)
-      setLocalReminders([])
-      localStorage.removeItem("hydrotrack_logs")
-      localStorage.removeItem("hydrotrack_goal")
-      localStorage.removeItem("hydrotrack_reminders")
-      
-      toast({
-        title: "Account Synced",
-        description: "Your guest data has been moved to your secure account.",
-      })
     }
-  }, [user, isHydrated, db, localLogs, localGoal, localReminders, toast])
+  }, [user, isHydrated, db, localLogs, localGoal, localReminders, firestoreProfile, isProfileLoading, toast, profileRef])
 
-  // Merge Data Logic for UI
+  // Data Aggregation
   const logs = user ? (firestoreLogs || []) : localLogs
   const goal = user ? (firestoreProfile?.dailyGoalMl || localGoal) : localGoal
   const reminders = user ? (firestoreReminders?.optimalReminderTimes || localReminders) : localReminders
+  const isLoading = isUserLoading || (user ? (isLogsLoading || isProfileLoading || isRemindersLoading) : !isHydrated)
 
   const addLog = (amount: number) => {
     const timestamp = Date.now()
@@ -195,9 +216,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       setDocumentNonBlocking(profileRef, {
         dailyGoalMl: amount,
         userId: user.uid,
-        preferredUnit: 'ml',
         updatedAt: new Date().toISOString(),
-        id: 'profile'
       }, { merge: true })
     } else {
       setLocalGoal(amount)
@@ -211,7 +230,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         userId: user.uid,
         isEnabled: true,
         updatedAt: new Date().toISOString(),
-        id: 'reminderSetting'
       }, { merge: true })
     } else {
       setLocalReminders(times)
@@ -233,14 +251,10 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         description: "Your hydration history has been saved to Google Drive.",
       })
     } catch (error: any) {
-      let message = error.message || "Could not save to Google Drive."
-      if (message.includes("Google Drive API has not been used") || message.includes("disabled")) {
-        message = "The Google Drive API is disabled. Please enable it in the Google Cloud Console for this project."
-      }
       toast({
         variant: "destructive",
         title: "Backup failed",
-        description: message,
+        description: error.message || "Could not save to Google Drive.",
       })
     }
   }
@@ -298,6 +312,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         todayTotal,
         streak,
         history,
+        isLoading,
       }}
     >
       {children}
