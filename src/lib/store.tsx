@@ -197,8 +197,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
           title: "Account Synced",
           description: "Your session data has been moved to your account.",
         })
-
-        addNotification('login', 'Session Login and Migration', 'completed')
       } else if (!isProfileLoading && !firestoreProfile && user) {
         // First time setup for fresh account
         const pRef = doc(db, "users", user.uid, "profile", "profile")
@@ -213,7 +211,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
           wakeUpTime: "07:00",
           sleepTime: "22:00"
         }, { merge: true })
-        addNotification('login', 'Account Login', 'completed')
       }
     }
   }, [user, isHydrated, db, localLogs, localGoal, localReminders, localDriveLinked, localNotifications, firestoreProfile, isProfileLoading, toast, profileRef])

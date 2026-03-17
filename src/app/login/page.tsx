@@ -20,6 +20,7 @@ import { useUser } from "@/firebase"
 import { useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
+import { useHydration } from "@/lib/store"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,7 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
   const { toast } = useToast()
+  const { addNotification } = useHydration()
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -56,8 +58,10 @@ export default function LoginPage() {
     try {
       if (pendingAction === "signup") {
         await initiateEmailSignUp(auth, email, password)
+        addNotification('login', 'New Account Created', 'completed')
       } else if (pendingAction === "guest") {
         await initiateAnonymousSignIn(auth)
+        addNotification('login', 'Guest Session Started', 'completed')
       }
     } catch (err: any) {
       toast({
@@ -82,6 +86,9 @@ export default function LoginPage() {
     } else {
       setLoading(true)
       initiateEmailSignIn(auth, email, password)
+        .then(() => {
+          addNotification('login', 'Email Login', 'completed')
+        })
         .catch((err) => {
           toast({
             variant: "destructive",
@@ -132,6 +139,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await initiateGoogleSignIn(auth)
+      addNotification('login', 'Google Login', 'completed')
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -147,6 +155,7 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await initiateMicrosoftSignIn(auth)
+      addNotification('login', 'Microsoft Login', 'completed')
     } catch (err: any) {
       toast({
         variant: "destructive",
@@ -158,7 +167,6 @@ export default function LoginPage() {
     }
   }
 
-  // Show nothing or a full-page loader while checking for an existing session
   if (isUserLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
@@ -167,8 +175,6 @@ export default function LoginPage() {
     )
   }
 
-  // If already logged in, the useEffect will handle redirection. 
-  // We return null here to avoid rendering the form briefly.
   if (user) return null
 
   return (
