@@ -2,10 +2,9 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Droplet, History, Settings, Home, Sparkles } from "lucide-react"
+import { Droplet, History, Settings, Home, Sparkles, UserCircle } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useUser } from "@/firebase"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const NAV_ITEMS = [
   { label: "Home", href: "/", icon: Home },
@@ -17,11 +16,6 @@ const NAV_ITEMS = [
 export function Navigation() {
   const pathname = usePathname()
   const { user } = useUser()
-
-  // Get user initials for fallback
-  const initials = user?.displayName
-    ? user.displayName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
-    : user?.email?.[0]?.toUpperCase() || 'U'
 
   // If the user is on the login page, we might want a simpler navigation or none at all
   const isLoginPage = pathname === "/login"
@@ -69,12 +63,9 @@ export function Navigation() {
                 </span>
               </div>
               
-              <Avatar className="h-9 w-9 border-2 border-primary/20 group-hover:border-primary transition-all">
-                <AvatarImage src={user.photoURL || undefined} />
-                <AvatarFallback className="bg-primary/10 text-primary font-bold text-xs">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
+              <div className="p-2 bg-primary/10 rounded-xl text-primary border-2 border-primary/20 group-hover:border-primary transition-all">
+                <UserCircle className="w-5 h-5" />
+              </div>
             </Link>
           </div>
         )}
