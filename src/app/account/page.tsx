@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -64,6 +63,7 @@ export default function AccountPage() {
           title: "Google Drive Connected",
           description: "Your connection is now saved to your account.",
         })
+        addNotification('drive_connected', 'Google Drive Linked', 'completed')
       }
     } catch (err: any) {
       toast({
@@ -71,7 +71,10 @@ export default function AccountPage() {
         title: "Connection Failed",
         description: err.message,
       })
-      addNotification('drive_connected', 'Google Drive Link Attempt', 'failed')
+      // Only attempt notification if the user session is still valid
+      if (auth.currentUser) {
+        addNotification('drive_connected', 'Google Drive Link Attempt', 'failed')
+      }
     } finally {
       setIsConnecting(false)
     }
