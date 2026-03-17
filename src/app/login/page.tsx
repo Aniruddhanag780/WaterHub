@@ -68,18 +68,20 @@ function LoginForm() {
     setLoading(true)
     try {
       // reCAPTCHA v3 score-based verification (invisible)
+      // The badge at the bottom right indicates this is active.
       const token = await executeRecaptcha(actionName)
       if (!token) {
         throw new Error("Failed to acquire security token.")
       }
-      // Note: In a production app, you would send this 'token' to your backend 
-      // to verify the score using your SECRET_KEY.
+      
+      // In a production app, you would verify this 'token' server-side.
+      // For this implementation, we proceed if a token is acquired.
       await callback()
     } catch (err: any) {
       toast({
         variant: "destructive",
         title: "Security Error",
-        description: err.message,
+        description: err.message || "Failed domain authorization.",
       })
     } finally {
       setLoading(false)
@@ -351,7 +353,7 @@ function LoginForm() {
       </div>
 
       {/* Visual Indicator of Background Security */}
-      <div className="fixed bottom-4 right-4 z-50 pointer-events-none opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+      <div className="fixed bottom-4 left-4 z-50 pointer-events-none opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
         <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">Score-based Security Active</span>
       </div>
@@ -392,7 +394,7 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  // Use the key you provided. Hardcoded as a fallback to ensure reliability during domain testing.
+  // Provided specific site key
   const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
 
   return (
