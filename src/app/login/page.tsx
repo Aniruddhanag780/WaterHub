@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, AlertTriangle, MailCheck, ArrowLeft, ShieldCheck, Clock } from "lucide-react"
+import { Loader2, User, AlertTriangle, MailCheck, ArrowLeft, ShieldCheck, Clock, Lock } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
@@ -56,6 +56,13 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router])
 
+  const validatePassword = (pass: string) => {
+    if (pass.length < 8) return "Password must be at least 8 characters long."
+    if (!/\d/.test(pass)) return "Password must contain at least one number."
+    if (!/[!@#$%^&*]/.test(pass)) return "Password must contain at least one special character (!@#$%^&*)."
+    return null
+  }
+
   const executeAuth = async () => {
     setLoading(true)
     try {
@@ -86,6 +93,15 @@ export default function LoginPage() {
     e.preventDefault()
     
     if (isSignUp) {
+      const error = validatePassword(password)
+      if (error) {
+        toast({
+          variant: "destructive",
+          title: "Password Hardness Limit",
+          description: error,
+        })
+        return
+      }
       setPendingAction("signup")
       setShowWarning(true)
     } else {
@@ -249,7 +265,7 @@ export default function LoginPage() {
           </p>
           {isSignUp && (
             <div className="mt-2 bg-blue-50 text-blue-600 py-1.5 px-3 rounded-lg flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider mx-4">
-              <ShieldCheck className="w-3.5 h-3.5" /> Email Verification Required
+              <ShieldCheck className="w-3.5 h-3.5" /> Verification & Hardness Required
             </div>
           )}
         </div>
@@ -268,7 +284,10 @@ export default function LoginPage() {
             />
           </div>
           <div className="space-y-1.5 relative">
-            <Label htmlFor="password" title="Password Label" className="font-semibold text-sm">Password</Label>
+            <Label htmlFor="password" title="Password Label" className="font-semibold text-sm flex items-center justify-between">
+              Password
+              {isSignUp && <span className="text-[10px] text-muted-foreground">8+ chars, 1 num, 1 sym</span>}
+            </Label>
             <Input 
               id="password" 
               type="password" 
