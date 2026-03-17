@@ -1,13 +1,10 @@
-
 "use client"
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Droplet, History, Settings, Home, LogOut, Sparkles, UserCircle } from "lucide-react"
+import { Droplet, History, Settings, Home, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { useUser, useAuth } from "@/firebase"
-import { Button } from "@/components/ui/button"
-import { signOut } from "firebase/auth"
+import { useUser } from "@/firebase"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 const NAV_ITEMS = [
@@ -20,11 +17,6 @@ const NAV_ITEMS = [
 export function Navigation() {
   const pathname = usePathname()
   const { user } = useUser()
-  const auth = useAuth()
-
-  const handleLogout = () => {
-    signOut(auth)
-  }
 
   // Get user initials for fallback
   const initials = user?.displayName
@@ -84,16 +76,6 @@ export function Navigation() {
                 </AvatarFallback>
               </Avatar>
             </Link>
-
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={handleLogout}
-              className="text-muted-foreground hover:text-white hover:bg-white/5 rounded-xl h-10 w-10"
-              title="Sign Out"
-            >
-              <LogOut className="w-5 h-5" />
-            </Button>
           </div>
         )}
       </div>
