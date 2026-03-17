@@ -112,7 +112,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const { data: firestoreProfile, isLoading: isProfileLoading } = useDoc<any>(profileRef)
   const { data: firestoreReminders, isLoading: isRemindersLoading } = useDoc<any>(reminderRef)
 
-  // Derived Values (Moved here to avoid ReferenceErrors in useEffects below)
+  // Derived Values
   const logs = user ? (firestoreLogs || []) : localLogs
   const notifications = user ? (firestoreNotifications || []) : localNotifications
   const dailySummaries = user ? (firestoreSummaries || []) : []
@@ -311,15 +311,18 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   }
 
   const setReminders = (times: string[]) => {
+    const sortedTimes = [...times].sort((a, b) => {
+      return new Date(`2000/01/01 ${a}`).getTime() - new Date(`2000/01/01 ${b}`).getTime()
+    })
     if (user && db && reminderRef) {
       setDocumentNonBlocking(reminderRef, {
-        optimalReminderTimes: times,
+        optimalReminderTimes: sortedTimes,
         userId: user.uid,
         isEnabled: true,
         updatedAt: new Date().toISOString(),
       }, { merge: true })
     } else {
-      setLocalReminders(times)
+      setLocalReminders(sortedTimes)
     }
   }
 

@@ -39,12 +39,13 @@ export default function Home() {
 
   if (!user) return null
 
-  // Find next reminder
+  // Find next reminder using robust time parsing
   const now = new Date()
-  const currentTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
   const nextReminder = reminders.find(r => {
-    return r > currentTimeStr
-  }) || reminders[0]
+    const reminderTime = new Date(`2000/01/01 ${r}`)
+    const nowTime = new Date(`2000/01/01 ${now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}`)
+    return reminderTime > nowTime
+  }) || (reminders.length > 0 ? "Done for today" : null)
 
   // Filter today's notifications using the contextual currentDate
   const todayNotifications = notifications.filter(n => {
@@ -153,7 +154,6 @@ export default function Home() {
         </Card>
       </div>
 
-      {/* Alarm / Reminder Card */}
       <Card 
         className={cn(
           "border-2 transition-all duration-300 rounded-[2rem] overflow-hidden",
@@ -174,9 +174,9 @@ export default function Home() {
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Hydration Alarm</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-xl font-black text-white">
-                  {reminders.length > 0 ? (nextReminder || "Finished") : "No Alarms Set"}
+                  {nextReminder || "No Alarms Set"}
                 </p>
-                {reminders.length > 0 && (
+                {reminders.length > 0 && nextReminder !== "Done for today" && (
                   <span className="text-[10px] font-bold text-primary animate-pulse">LIVE</span>
                 )}
               </div>
