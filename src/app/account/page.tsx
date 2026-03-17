@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -166,14 +165,6 @@ export default function AccountPage() {
           <h1 className="text-3xl font-extrabold tracking-tight text-white">Account</h1>
           <p className="text-muted-foreground font-medium">Your personal profile and backup settings.</p>
         </div>
-        <Button 
-          variant="outline" 
-          size="icon" 
-          className="rounded-2xl border-white/10 bg-white/5 h-12 w-12 hover:bg-white/10"
-          onClick={() => router.push('/settings')}
-        >
-          <Settings className="w-6 h-6 text-primary" />
-        </Button>
       </div>
 
       <div className="space-y-6">
