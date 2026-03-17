@@ -18,7 +18,7 @@ export type WaterLog = {
 
 export type AppNotification = {
   id: string
-  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder' | 'water_added' | 'water_removed' | 'reminders_updated' | 'hydration_reminder_triggered' | 'email_updated'
+  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder' | 'water_added' | 'water_removed' | 'reminders_updated' | 'hydration_reminder_triggered' | 'email_updated' | 'alarm_silenced'
   title: string
   status: 'completed' | 'failed'
   timestamp: string
@@ -131,19 +131,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
   const isAutoSyncEnabled = user ? (firestoreProfile?.isAutoSyncEnabled || false) : localAutoSyncEnabled
 
-  const requestNotificationPermission = async () => {
-    if ("Notification" in window) {
-      const permission = await Notification.requestPermission()
-      setNotificationPermission(permission)
-      if (permission === "granted") {
-        toast({
-          title: "Notifications Enabled",
-          description: "WaterHub will now alert you even when the app is in the background.",
-        })
-      }
-    }
-  }
-
   const addNotification = useCallback((type: AppNotification['type'], title: string, status: AppNotification['status']) => {
     const timestamp = new Date().toISOString()
     if (user && db) {
@@ -167,6 +154,37 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("hydrotrack_notifications", JSON.stringify([newNotif, ...notifications].slice(0, 50)))
     }
   }, [user, db, notifications])
+
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      toast({
+        variant: "destructive",
+        title: "Not Supported",
+        description: "Your browser does not support desktop notifications.",
+      })
+      return
+    }
+
+    try {
+      const permission = await Notification.requestPermission()
+      setNotificationPermission(permission)
+      
+      if (permission === "granted") {
+        toast({
+          title: "Notifications Enabled",
+          description: "WaterHub will now alert you even when the app is in the background.",
+        })
+      } else if (permission === "denied") {
+        toast({
+          variant: "destructive",
+          title: "Permission Denied",
+          description: "Please enable notifications in your browser settings for WaterHub.",
+        })
+      }
+    } catch (err) {
+      console.error("Permission request failed", err)
+    }
+  }
 
   const syncLogsToDrive = useCallback(async (tokenToUse: string) => {
     try {
@@ -208,7 +226,8 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
   const stopAlarm = useCallback(() => {
     setIsRinging(false)
-  }, [])
+    addNotification('alarm_silenced', 'Hydration alarm silenced', 'completed')
+  }, [addNotification])
 
   // Procedural Deep Beep Logic with increasing intensity
   useEffect(() => {
@@ -312,15 +331,19 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
         // Show System Notification
         if (notificationPermission === "granted") {
-          const notification = new Notification("WaterHub: Time to Hydrate!", {
-            body: `Don't forget to drink your scheduled water (${triggeredReminderStr}).`,
-            icon: "/favicon.ico",
-            tag: "hydration-reminder",
-            requireInteraction: true
-          })
-          notification.onclick = () => {
-            window.focus()
-            notification.close()
+          try {
+            const notification = new Notification("WaterHub: Time to Hydrate!", {
+              body: `Don't forget to drink your scheduled water (${triggeredReminderStr}).`,
+              icon: "/favicon.ico",
+              tag: "hydration-reminder",
+              requireInteraction: true
+            })
+            notification.onclick = () => {
+              window.focus()
+              notification.close()
+            }
+          } catch (e) {
+            console.warn("Native notification failed", e)
           }
         }
 

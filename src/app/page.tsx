@@ -8,7 +8,7 @@ import { WaterProgress } from "@/components/WaterProgress"
 import { WaterLogger } from "@/components/WaterLogger"
 import { Card, CardContent } from "@/components/ui/card"
 import { useHydration } from "@/lib/store"
-import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert, Cloud, Trash2, ShieldCheck } from "lucide-react"
+import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert, Cloud, Trash2, ShieldCheck, Power } from "lucide-react"
 import {
   Popover,
   PopoverContent,
@@ -66,6 +66,8 @@ export default function Home() {
         return <Trash2 className="w-4 h-4" />
       case 'goal_updated':
         return <Trophy className="w-4 h-4" />
+      case 'alarm_silenced':
+        return <Power className="w-4 h-4" />
       case 'reminders_updated':
       case 'hydration_reminder':
         return <Bell className="w-4 h-4" />
@@ -119,7 +121,7 @@ export default function Home() {
               onClick={requestNotificationPermission}
               className="bg-primary text-background font-bold rounded-lg h-9 px-4 hover:bg-primary/90"
             >
-              Enable
+              {notificationPermission === "denied" ? "Reset in Browser" : "Enable"}
             </Button>
           </CardContent>
         </Card>
