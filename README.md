@@ -60,4 +60,4 @@ WaterHub is a premium, high-performance hydration tracking application designed 
    ```
 
 ---
-*Developed with a focus on high-performance hydration and intelligent health tracking.*
+*Developed by Aniruddha Nag*
