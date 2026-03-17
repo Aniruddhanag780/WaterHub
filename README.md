@@ -1,42 +1,42 @@
-# WaterHub - Premium Smart Hydration Tracker
+# 💧 WaterHub - Intelligent Smart Hydration Tracker
 
-WaterHub is an intelligent, high-performance water tracking application designed for health-conscious individuals. Built with **Next.js 15**, **Firebase**, and **Genkit (Gemini AI)**, it offers a seamless blend of automation and manual control to optimize your daily hydration.
+WaterHub is a premium, high-performance hydration tracking application designed to optimize your health through artificial intelligence. Built with **Next.js 15**, **Firebase**, and **Google Gemini (Genkit)**, it provides a seamless blend of automated scheduling and persistent accountability.
 
-## 🚀 Key Features
+## 🚀 Core Features
 
-### 🧠 AI-Powered Hydration
-- **Smart Reminders:** Leverages Google Gemini AI to analyze your wake/sleep cycle and daily activity patterns.
-- **Dynamic Scheduling:** Generates an optimal 6-8 reminder schedule that spreads your goal volume without interrupting your "busy" hours.
-- **Intelligent Insights:** Provides explanations for why specific times were chosen based on your goals.
+### 🧠 AI-Optimized Hydration
+- **Smart Scheduling:** Uses Google Gemini AI to analyze your wake/sleep cycle and daily activity patterns to generate a non-disruptive hydration schedule.
+- **Contextual Insights:** Provides intelligent explanations for why specific reminder times were chosen based on your goals.
+- **Dynamic Adjustments:** Automatically spreads your target volume across 6-8 reminders, specifically avoiding your "Busy" hours.
 
 ### 🔔 Persistent Alarm System
-- **Deep Beep Logic:** A custom procedural audio alarm that beeps at 150Hz.
-- **Escalating Intensity:** The alarm pitch and speed increase over time, becoming more urgent until you log your water intake.
-- **Native Notifications:** Integrated with the Web Push API to alert you even when the app is in the background or the device is locked.
+- **Deep Beep Logic:** A custom procedural audio alarm (150Hz sine wave) that bypasses standard notification fatigue.
+- **Escalating Intensity:** The alarm's pitch and frequency increase over time, becoming more urgent until you log your water intake.
+- **System-Level Alerts:** Integrated with the Web Push API to provide background notifications and background-to-foreground navigation.
 
 ### ☁️ Secure Cloud Infrastructure
-- **Google Drive Backup:** Uses the `drive.file` scope to securely back up your hydration history to your personal cloud storage.
-- **Auto-Sync:** Optionally backs up your data automatically every night at midnight.
-- **Firebase Firestore:** Real-time data synchronization across all your devices.
+- **Google Drive Backup:** Securely backs up your hydration history to your personal Google Drive using the restricted `drive.file` scope.
+- **Auto-Sync:** Optional automatic midnight backups to ensure your data is always safe.
+- **Real-Time Sync:** Powered by Firebase Firestore for instantaneous updates across all your devices.
 
-### 🔐 Advanced Authentication & Security
+### 🔐 Enterprise-Grade Security
 - **Multi-Provider Auth:** Support for Google, Microsoft, Email/Password, and Guest sessions.
-- **Mandatory Email Verification:** Ensures all email-based accounts are verified before granting access.
-- **Data Retention Policy:** Inactive unverified or guest accounts are automatically cleaned after 30 days of inactivity to optimize performance.
-- **Password Hardness:** Enforces an 8+ character limit with numbers and symbols for maximum security.
+- **Strict Verification:** Mandatory email verification for all password-based accounts to prevent spam and ensure data integrity.
+- **Password Hardness:** Enforces high-entropy passwords (8+ characters, including numbers and symbols).
+- **Data Retention Policy:** Automatic 30-day cleanup of inactive guest or unverified accounts to maintain system performance.
 
 ### 📊 Comprehensive Activity Tracking
-- **Unified Activity Feed:** Every action—from adding 150ml of water to silencing an alarm or updating an email—is recorded and visible in real-time.
-- **Interactive Progress:** Dynamic SVG progress rings and glass-filling animations provide instant visual feedback.
-- **Historical Summaries:** Detailed logs and daily completion badges to track your consistency.
+- **Unified Activity Feed:** Every single action—from adding 150ml of water to silencing an alarm or updating an email—is recorded in a real-time notification hub.
+- **Visual Progress:** Elegant SVG progress rings and glass-filling animations provide instant feedback on your daily goal.
+- **Streak Tracker:** Motivational tracking of consecutive days meeting your hydration targets.
 
-## 🛠️ Tech Stack
-- **Framework:** Next.js 15 (App Router)
-- **Frontend:** React 19, Tailwind CSS, Shadcn UI
-- **AI:** Genkit with Google Gemini Flash 1.5
-- **Backend:** Firebase (Auth, Firestore, App Hosting)
+## 🛠️ Technical Stack
+- **Framework:** Next.js 15 (App Router, Server Actions)
+- **Frontend:** React 19, Tailwind CSS, Shadcn UI (Radix Primitives)
+- **AI Engine:** Genkit with Google Gemini 2.5 Flash
+- **Backend/Auth:** Firebase (Auth, Firestore, App Hosting)
+- **Audio Engine:** Web Audio API (Procedural Oscillator)
 - **Icons:** Lucide React
-- **Audio:** Web Audio API (Procedural Oscillator)
 
 ## 🏁 Getting Started
 
@@ -45,16 +45,19 @@ WaterHub is an intelligent, high-performance water tracking application designed
    npm install
    ```
 
-2. **Run Development Server:**
+2. **Environment Setup:**
+   Ensure your `.env` file contains the necessary Firebase and Google AI API keys.
+
+3. **Run Development Server:**
    ```bash
    npm run dev
    ```
-   The app will be available on port 9002.
+   The application will be accessible at `http://localhost:9002`.
 
-3. **Genkit Developer UI:**
+4. **AI Developer UI:**
    ```bash
    npm run genkit:dev
    ```
 
 ---
-Developed by Aniruddha Nag.
+*Developed with a focus on high-performance hydration and intelligent health tracking.*
