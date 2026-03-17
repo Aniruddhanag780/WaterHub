@@ -1,9 +1,33 @@
+
 "use client"
 
+import { useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useUser } from "@/firebase"
 import { SmartReminderTool } from "@/components/SmartReminderTool"
-import { Bell, Sparkles } from "lucide-react"
+import { Bell, Sparkles, Loader2 } from "lucide-react"
+import { Card, CardContent } from "@/components/ui/card"
 
 export default function RemindersPage() {
+  const { user, isUserLoading } = useUser()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, isUserLoading, router])
+
+  if (isUserLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!user) return null
+
   return (
     <div className="space-y-8 max-w-lg mx-auto pb-10">
       <div className="space-y-1">
@@ -35,5 +59,3 @@ export default function RemindersPage() {
     </div>
   )
 }
-
-import { Card, CardContent } from "@/components/ui/card"

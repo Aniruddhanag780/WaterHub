@@ -1,25 +1,46 @@
+
 "use client"
 
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { useUser, useAuth } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Target, UserCircle, Droplets, ShieldCheck, Cloud, Check, AlertCircle, RefreshCw, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { useAuth } from "@/firebase"
 import { signInWithGoogleForDrive } from "@/firebase/non-blocking-login"
 import { useToast } from "@/hooks/use-toast"
 
 export default function SettingsPage() {
+  const { user, isUserLoading } = useUser()
+  const router = useRouter()
   const { goal, setDailyGoal, syncLogsToDrive } = useHydration()
   const auth = useAuth()
   const { toast } = useToast()
+  
   const [isDriveConnected, setIsDriveConnected] = useState(false)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, isUserLoading, router])
+
+  if (isUserLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!user) return null
 
   const handleConnectDrive = async () => {
     setIsConnecting(true)
@@ -104,15 +125,16 @@ export default function SettingsPage() {
                   <UserCircle className="w-10 h-10 text-primary" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-lg text-white">HydroTrack Explorer</h4>
-                  <div className="text-sm text-muted-foreground font-medium flex items-center gap-1">
+                  <h4 className="font-bold text-lg text-white">{user.displayName || "HydroTrack User"}</h4>
+                  <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
+                  <div className="text-sm text-muted-foreground font-medium flex items-center gap-1 mt-1">
                     {isDriveConnected ? (
-                      <span className="flex items-center gap-1 text-emerald-400">
+                      <span className="flex items-center gap-1 text-emerald-400 text-[10px] uppercase font-bold">
                         <ShieldCheck className="w-3 h-3" /> Cloud Sync Active
                       </span>
                     ) : (
-                      <span className="flex items-center gap-1 text-orange-400">
-                        <AlertCircle className="w-3 h-3" /> Connect Google Drive for cloud sync
+                      <span className="flex items-center gap-1 text-orange-400 text-[10px] uppercase font-bold">
+                        <AlertCircle className="w-3 h-3" /> Connect Google Drive
                       </span>
                     )}
                   </div>

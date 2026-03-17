@@ -1,16 +1,37 @@
+
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useUser } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
-import { Trash2, Calendar, Droplets, CheckCircle2, XCircle, ChevronDown, ChevronUp } from "lucide-react"
+import { Trash2, Calendar, Droplets, CheckCircle2, XCircle, ChevronDown, ChevronUp, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 
 export default function HistoryPage() {
+  const { user, isUserLoading } = useUser()
+  const router = useRouter()
   const { logs, history, removeLog, goal } = useHydration()
   const [showAll, setShowAll] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!isUserLoading && !user) {
+      router.push("/login")
+    }
+  }, [user, isUserLoading, router])
+
+  if (isUserLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (!user) return null
 
   // Sort dates descending (newest first)
   const sortedDates = Object.keys(history).sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
@@ -22,7 +43,7 @@ export default function HistoryPage() {
   const filteredLogs = [...logs]
     .filter(log => {
       if (!selectedDate) return true // Show all recent logs if no date selected
-      const logDate = new Date(log.timestamp).toLocaleDateString()
+      const logDate = log.timestamp ? new Date(log.timestamp).toLocaleDateString() : ""
       return logDate === selectedDate
     })
     .sort((a, b) => {
