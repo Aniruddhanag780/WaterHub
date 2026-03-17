@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Auth,
@@ -8,6 +9,7 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   sendPasswordResetEmail,
+  linkWithPopup,
 } from 'firebase/auth';
 
 /** 
@@ -58,20 +60,27 @@ export function initiateMicrosoftSignIn(authInstance: Auth) {
 }
 
 /** 
- * Connects to Google Drive by requesting the drive.file scope.
+ * Connects the current application session to Google Drive by requesting the drive.file scope.
+ * This is treated as a service connection for background history backups.
  * Returns a promise that resolves with the access token.
  */
-export async function signInWithGoogleForDrive(authInstance: Auth): Promise<string | null> {
+export async function connectGoogleDrive(authInstance: Auth): Promise<string | null> {
   const provider = new GoogleAuthProvider();
   provider.addScope('https://www.googleapis.com/auth/drive.file');
   
+  if (!authInstance.currentUser) {
+    throw new Error("You must be signed in to connect a backup service.");
+  }
+
   try {
+    // We use signInWithPopup to ensure we get a fresh token with the requested scope.
+    // This connects the Drive service to the current session.
     const result = await signInWithPopup(authInstance, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     return credential?.accessToken || null;
   } catch (error: any) {
     if (error.code === 'auth/operation-not-allowed') {
-      throw new Error("Google Sign-In is not enabled in your Firebase Console. Please enable it in the Authentication > Sign-in method section.");
+      throw new Error("Google services are not enabled in your Firebase Console.");
     }
     throw error;
   }
