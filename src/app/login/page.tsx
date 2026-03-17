@@ -342,7 +342,7 @@ function LoginForm() {
             <span>{isSignUp ? "Already have an account?" : "Don't have an account?"}</span>
             <Button 
               variant="link" 
-              className="text-muted-foreground font-medium p-0 h-auto text-sm underline hover:text-black/70 transition-colors" 
+              className="text-black font-medium p-0 h-auto text-sm underline hover:text-black/70 transition-colors" 
               onClick={() => setIsSignUp(!isSignUp)}
             >
               {isSignUp ? "Sign In" : "Sign Up"}
