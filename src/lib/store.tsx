@@ -142,6 +142,18 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
   // Alarm Trigger Logic
   useEffect(() => {
+    const playAlarmSound = () => {
+      try {
+        // Subtle water droplet/bubble sound
+        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
+        audio.play().catch(() => {
+          // Ignore audio errors (usually blocked by browser until user interacts)
+        })
+      } catch (e) {
+        // Fallback or ignore
+      }
+    }
+
     const checkAlarms = () => {
       const now = new Date()
       const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
@@ -165,6 +177,9 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       if (matchingReminder) {
         lastTriggeredTimeRef.current = timeStr
         
+        // Play sound
+        playAlarmSound()
+
         toast({
           title: "💧 Time to Hydrate!",
           description: `Scheduled reminder at ${matchingReminder}. Let's hit that goal!`,
