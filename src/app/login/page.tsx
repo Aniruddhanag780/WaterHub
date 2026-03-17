@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState, useEffect } from "react"
@@ -14,7 +15,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, AlertTriangle, MailCheck, ArrowLeft, ShieldCheck } from "lucide-react"
+import { Loader2, User, AlertTriangle, MailCheck, ArrowLeft, ShieldCheck, Clock } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
@@ -50,7 +51,6 @@ export default function LoginPage() {
   const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
 
   useEffect(() => {
-    // If user is already logged in AND verified, redirect home
     if (!isUserLoading && user && user.emailVerified) {
       router.push("/")
     }
@@ -61,9 +61,7 @@ export default function LoginPage() {
     try {
       if (pendingAction === "signup") {
         const userCredential = await initiateEmailSignUp(auth, email, password)
-        // Send verification email
         await initiateEmailVerification(userCredential.user)
-        // Sign out immediately so they can't access the app until verified
         await signOut(auth)
         setVerificationSent(true)
         addNotification('login', 'New Account Created (Pending Verification)', 'completed')
@@ -95,7 +93,6 @@ export default function LoginPage() {
       try {
         const userCredential = await initiateEmailSignIn(auth, email, password)
         
-        // If email is not verified, block access
         if (!userCredential.user.emailVerified) {
           await signOut(auth)
           toast({
@@ -199,7 +196,6 @@ export default function LoginPage() {
     )
   }
 
-  // Verification Screen
   if (verificationSent) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[90vh] px-4 py-10 bg-[#09090b]">
@@ -212,6 +208,12 @@ export default function LoginPage() {
             <p className="text-muted-foreground text-sm font-medium">
               We've sent a verification link to <span className="text-black font-bold">{email}</span>. 
               Please verify your account before logging in.
+            </p>
+          </div>
+          <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex items-start gap-3 text-left">
+            <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-[10px] leading-relaxed text-amber-800 font-bold uppercase tracking-tight">
+              Notice: Unverified accounts and their associated hydration data are subject to deletion after 30 days of inactivity.
             </p>
           </div>
           <div className="pt-4">
@@ -390,7 +392,7 @@ export default function LoginPage() {
             </div>
             <AlertDialogTitle className="text-2xl font-bold text-slate-900">Data Retention Notice</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-600 text-base">
-              You are about to use a temporary session. Please note that all hydration data and history will be <strong>deleted after 30 days</strong> of inactivity.
+              You are about to use a temporary session. Please note that all hydration data and history will be <strong>deleted after 30 days</strong> of inactivity. This also applies to accounts pending email verification.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-col sm:flex-col gap-3 mt-6">

@@ -21,8 +21,6 @@ export function Navigation() {
   // Don't show navigation on the login page
   if (pathname === "/login") return null
   
-  // Render a minimal placeholder or nothing during the first server pass to prevent hydration errors
-  // with dynamic path-based active states
   if (!mounted) return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 h-20 md:relative md:border-t-0 md:bg-transparent md:h-24" />
   )
@@ -37,8 +35,8 @@ export function Navigation() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 flex items-center h-20 px-2 md:relative md:border-t-0 md:bg-transparent md:h-24 md:px-0 md:justify-center md:gap-12">
-      {/* Desktop Logo */}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 flex items-center h-20 px-2 md:relative md:border-t-0 md:bg-transparent md:h-24 md:px-0 md:flex md:items-center md:justify-center md:gap-10">
+      {/* Desktop Logo - Integrated into the main sequence for equal distance */}
       <div className="hidden md:flex items-center gap-2 text-primary group cursor-pointer transition-all hover:opacity-80">
         <div className="p-2.5 bg-primary/10 rounded-2xl transition-all group-hover:scale-110 group-hover:bg-primary/20">
           <Droplet className="w-6 h-6 fill-current" />
@@ -47,7 +45,7 @@ export function Navigation() {
       </div>
       
       {/* Navigation Links - Balanced spacing matching the logo gap */}
-      <div className="flex w-full justify-evenly items-center md:w-auto md:gap-6 lg:gap-10">
+      <div className="flex w-full justify-evenly items-center md:w-auto md:flex md:items-center md:gap-10">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
