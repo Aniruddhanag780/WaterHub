@@ -321,7 +321,7 @@ export default function LoginPage() {
               I understand, proceed
             </AlertDialogAction>
             <AlertDialogCancel 
-              className="w-full h-12 rounded-xl border-slate-200 text-slate-900 font-semibold hover:bg-slate-50"
+              className="w-full h-12 rounded-xl border-slate-200 bg-white text-slate-900 font-semibold hover:bg-slate-50"
               onClick={() => {
                 setShowWarning(false)
                 setPendingAction(null)
