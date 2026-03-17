@@ -112,6 +112,15 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const { data: firestoreProfile, isLoading: isProfileLoading } = useDoc<any>(profileRef)
   const { data: firestoreReminders, isLoading: isRemindersLoading } = useDoc<any>(reminderRef)
 
+  // Derived Values (Moved here to avoid ReferenceErrors in useEffects below)
+  const logs = user ? (firestoreLogs || []) : localLogs
+  const notifications = user ? (firestoreNotifications || []) : localNotifications
+  const dailySummaries = user ? (firestoreSummaries || []) : []
+  const goal = user ? (firestoreProfile?.dailyGoalMl || localGoal) : localGoal
+  const reminders = user ? (firestoreReminders?.optimalReminderTimes || localReminders) : localReminders
+  const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
+  const isAutoSyncEnabled = user ? (firestoreProfile?.isAutoSyncEnabled || false) : localAutoSyncEnabled
+
   const syncLogsToDrive = async (tokenToUse: string) => {
     try {
       const backupData = {
@@ -204,14 +213,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   }, [user, isHydrated, db, localLogs, localGoal, localReminders, localDriveLinked, localAutoSyncEnabled, localNotifications])
 
   const isLoading = isUserLoading || (user ? (isLogsLoading || isProfileLoading || isRemindersLoading || isNotificationsLoading || isSummariesLoading) : !isHydrated)
-  
-  const logs = user ? (firestoreLogs || []) : localLogs
-  const notifications = user ? (firestoreNotifications || []) : localNotifications
-  const dailySummaries = user ? (firestoreSummaries || []) : []
-  const goal = user ? (firestoreProfile?.dailyGoalMl || localGoal) : localGoal
-  const reminders = user ? (firestoreReminders?.optimalReminderTimes || localReminders) : localReminders
-  const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
-  const isAutoSyncEnabled = user ? (firestoreProfile?.isAutoSyncEnabled || false) : localAutoSyncEnabled
 
   const updateDailySummary = (date: string, amountChange: number) => {
     if (!user || !db) return
