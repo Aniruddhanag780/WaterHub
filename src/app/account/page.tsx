@@ -7,11 +7,12 @@ import { useUser, useAuth } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { UserCircle, ShieldCheck, Cloud, Check, AlertCircle, RefreshCw, Loader2 } from "lucide-react"
+import { UserCircle, ShieldCheck, Cloud, Check, AlertCircle, RefreshCw, Loader2, LogOut, Mail, Calendar } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { signInWithGoogleForDrive } from "@/firebase/non-blocking-login"
 import { useToast } from "@/hooks/use-toast"
+import { signOut } from "firebase/auth"
 
 export default function AccountPage() {
   const { user, isUserLoading } = useUser()
@@ -74,6 +75,23 @@ export default function AccountPage() {
     }
   }
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth)
+      router.push("/login")
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully logged out.",
+      })
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error signing out",
+        description: error.message,
+      })
+    }
+  }
+
   return (
     <div className="space-y-8 max-w-lg mx-auto pb-10 text-white">
       <div className="space-y-1">
@@ -84,34 +102,34 @@ export default function AccountPage() {
       <div className="space-y-6">
         <section className="space-y-4">
           <h3 className="text-lg font-bold flex items-center gap-2 px-1">
-            <UserCircle className="w-5 h-5 text-primary" /> Profile & Security
+            <UserCircle className="w-5 h-5 text-primary" /> Profile Details
           </h3>
           <Card className="border-white/10 bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden">
             <CardContent className="pt-6 space-y-6">
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 shadow-inner">
-                  <UserCircle className="w-10 h-10 text-primary" />
+                  {user.photoURL ? (
+                    <img src={user.photoURL} alt="Profile" className="w-full h-full rounded-2xl object-cover" />
+                  ) : (
+                    <UserCircle className="w-10 h-10 text-primary" />
+                  )}
                 </div>
-                <div>
+                <div className="flex-1">
                   <h4 className="font-bold text-lg text-white">{user.displayName || "HydroTrack User"}</h4>
-                  <p className="text-xs text-muted-foreground font-medium">{user.email}</p>
-                  <div className="text-sm text-muted-foreground font-medium flex items-center gap-1 mt-1">
-                    {isDriveConnected ? (
-                      <span className="flex items-center gap-1 text-emerald-400 text-[10px] uppercase font-bold">
-                        <ShieldCheck className="w-3 h-3" /> Cloud Sync Active
-                      </span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-orange-400 text-[10px] uppercase font-bold">
-                        <AlertCircle className="w-3 h-3" /> Connect Google Drive
-                      </span>
-                    )}
+                  <div className="flex items-center gap-2 text-muted-foreground text-sm font-medium">
+                    <Mail className="w-3.5 h-3.5" /> {user.email}
                   </div>
+                  {user.metadata.creationTime && (
+                    <div className="flex items-center gap-2 text-muted-foreground text-[10px] uppercase font-bold tracking-wider mt-1">
+                      <Calendar className="w-3 h-3" /> Member since {new Date(user.metadata.creationTime).toLocaleDateString()}
+                    </div>
+                  )}
                 </div>
               </div>
 
               <div className="pt-4 border-t border-white/5 space-y-4">
                 <div className="flex flex-col gap-3">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">External Backup</Label>
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Cloud Sync</Label>
                   <div className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 group hover:bg-white/10 transition-all">
                     <div className="flex items-center gap-3">
                       <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
@@ -119,7 +137,7 @@ export default function AccountPage() {
                       </div>
                       <div>
                         <p className="text-sm font-bold text-white">Google Drive</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">Backup your hydration history</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">External data backup</p>
                       </div>
                     </div>
                     <div className="flex gap-2">
@@ -155,6 +173,17 @@ export default function AccountPage() {
                       </Button>
                     </div>
                   </div>
+                </div>
+
+                <div className="pt-2">
+                  <Button 
+                    variant="destructive" 
+                    className="w-full h-12 rounded-xl font-bold flex items-center justify-center gap-2 group transition-all"
+                    onClick={handleLogout}
+                  >
+                    <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+                    Sign Out
+                  </Button>
                 </div>
               </div>
             </CardContent>
