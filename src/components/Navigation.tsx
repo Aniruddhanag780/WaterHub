@@ -1,3 +1,4 @@
+
 "use client"
 
 import Link from "next/link"
@@ -49,25 +50,20 @@ export function Navigation() {
           )
         })}
 
-        <div className="h-8 w-[1px] bg-white/10 mx-2 hidden md:block" />
-
         {user && (
-          <div className="flex items-center gap-3">
-            <Link href="/settings" className="flex items-center gap-3 group">
-              <div className="hidden lg:flex flex-col items-end">
-                <span className="text-xs font-bold text-white leading-tight group-hover:text-primary transition-colors">
-                  Account
-                </span>
-                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
-                  {user.displayName || "View Profile"}
-                </span>
-              </div>
-              
-              <div className="p-2 bg-primary/10 rounded-xl text-primary border-2 border-primary/20 group-hover:border-primary transition-all">
-                <UserCircle className="w-5 h-5" />
-              </div>
+          <>
+            <div className="h-8 w-[1px] bg-white/10 mx-2 hidden md:block" />
+            <Link 
+              href="/settings" 
+              className={cn(
+                "flex flex-col items-center justify-center gap-1 px-3 py-1 rounded-xl transition-all md:flex-row md:gap-2",
+                pathname === "/settings" ? "text-primary bg-primary/10 shadow-[0_0_15px_rgba(0,229,255,0.1)]" : "text-muted-foreground hover:text-white"
+              )}
+            >
+              <UserCircle className="w-5 h-5" />
+              <span className="text-[10px] md:text-sm font-semibold">Account</span>
             </Link>
-          </div>
+          </>
         )}
       </div>
     </nav>
