@@ -6,7 +6,7 @@ import { useUser, useAuth } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { UserCircle, Cloud, Check, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2, Power, Settings, Info } from "lucide-react"
+import { UserCircle, Cloud, Check, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2, Power, Settings, Info, Link2Off } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { connectGoogleDrive } from "@/firebase/non-blocking-login"
@@ -96,11 +96,19 @@ export default function AccountPage() {
     }
   }
 
+  const handleUnlinkDrive = () => {
+    setDriveLinked(false)
+    setAutoSyncEnabled(false)
+    setAccessToken(null)
+    toast({
+      title: "Service Disconnected",
+      description: "Google Drive has been unlinked from your account.",
+    })
+  }
+
   const handleSyncNow = async () => {
     let tokenToUse = accessToken
     
-    // If we don't have a token in the current session, we must refresh it with a popup.
-    // This happens after page refreshes or if the session expired.
     if (!tokenToUse) {
       setIsSyncing(true)
       try {
@@ -153,7 +161,7 @@ export default function AccountPage() {
     <div className="space-y-8 max-w-lg mx-auto pb-10 text-white animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex items-center justify-between">
         <div className="space-y-1">
-          <h1 className="text-3xl font-extrabold tracking-tight">Account</h1>
+          <h1 className="text-3xl font-extrabold tracking-tight text-white">Account</h1>
           <p className="text-muted-foreground font-medium">Your personal profile and backup settings.</p>
         </div>
         <Button 
@@ -264,45 +272,56 @@ export default function AccountPage() {
                     </div>
                     
                     {isDriveLinked && (
-                      <div className="pt-3 border-t border-white/5 flex items-center justify-between group/sync">
-                        <div className="flex items-center gap-2">
-                          <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-[10px] font-bold uppercase text-muted-foreground">Auto-Backup</span>
+                      <div className="pt-3 border-t border-white/5 flex flex-col gap-3">
+                        <div className="flex items-center justify-between group/sync">
+                          <div className="flex items-center gap-2">
+                            <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
+                            <span className="text-[10px] font-bold uppercase text-muted-foreground">Auto-Backup</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {isAutoSyncEnabled ? (
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  setAutoSyncEnabled(false)
+                                  toast({
+                                    title: "Auto-Sync Disabled",
+                                    description: "Manual backups are still available.",
+                                  })
+                                }}
+                                className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                              >
+                                <Power className="w-3 h-3" />
+                                Turn Off
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setAutoSyncEnabled(true)
+                                  toast({
+                                    title: "Auto-Sync Enabled",
+                                    description: "Daily midnight backups are now active.",
+                                  })
+                                }}
+                                className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-black transition-all"
+                              >
+                                Enable
+                              </Button>
+                            )}
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          {isAutoSyncEnabled ? (
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => {
-                                setAutoSyncEnabled(false)
-                                toast({
-                                  title: "Auto-Sync Disabled",
-                                  description: "Manual backups are still available.",
-                                })
-                              }}
-                              className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
-                            >
-                              <Power className="w-3 h-3" />
-                              Turn Off
-                            </Button>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setAutoSyncEnabled(true)
-                                toast({
-                                  title: "Auto-Sync Enabled",
-                                  description: "Daily midnight backups are now active.",
-                                })
-                              }}
-                              className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-black transition-all"
-                            >
-                              Enable
-                            </Button>
-                          )}
-                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 text-[10px] font-bold uppercase tracking-widest h-8"
+                          onClick={handleUnlinkDrive}
+                        >
+                          <Link2Off className="w-3.5 h-3.5 mr-2" />
+                          Unlink Drive Account
+                        </Button>
                       </div>
                     )}
                   </div>

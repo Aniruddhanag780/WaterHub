@@ -18,6 +18,7 @@ export function Navigation() {
     { label: "History", href: "/history", icon: History },
     { label: "Alarms", href: "/reminders", icon: Bell },
     { label: "AI Smart", href: "/ai-suggestions", icon: Sparkles },
+    { label: "Settings", href: "/settings", icon: Settings },
     { label: "Account", href: "/account", icon: UserCircle },
   ]
 
@@ -28,7 +29,7 @@ export function Navigation() {
         <div className="p-2.5 bg-primary/10 rounded-2xl transition-all group-hover:scale-110 group-hover:bg-primary/20">
           <Droplet className="w-6 h-6 fill-current" />
         </div>
-        <span className="text-2xl font-black tracking-tight text-white uppercase italic">WaterHub</span>
+        <span className="text-2xl font-black tracking-tight text-white uppercase italic ml-[-4px]">WaterHub</span>
       </div>
       
       {/* Navigation Links - Perfect Distribution */}
