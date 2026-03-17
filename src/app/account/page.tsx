@@ -17,11 +17,10 @@ import { signOut } from "firebase/auth"
 export default function AccountPage() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
-  const { syncLogsToDrive } = useHydration()
+  const { isDriveLinked, setDriveLinked, syncLogsToDrive } = useHydration()
   const auth = useAuth()
   const { toast } = useToast()
   
-  const [isDriveConnected, setIsDriveConnected] = useState(false)
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
@@ -48,10 +47,10 @@ export default function AccountPage() {
       const token = await signInWithGoogleForDrive(auth)
       if (token) {
         setAccessToken(token)
-        setIsDriveConnected(true)
+        setDriveLinked(true)
         toast({
           title: "Google Drive Connected",
-          description: "You can now sync your history to your cloud storage.",
+          description: "Your connection is now saved to your account.",
         })
       }
     } catch (err: any) {
@@ -66,7 +65,27 @@ export default function AccountPage() {
   }
 
   const handleSyncNow = async () => {
-    if (!accessToken) return
+    // If we have no local token but user is marked as linked, we need to re-auth briefly to get a fresh token
+    if (!accessToken) {
+      setIsSyncing(true)
+      try {
+        const token = await signInWithGoogleForDrive(auth)
+        if (token) {
+          setAccessToken(token)
+          await syncLogsToDrive(token)
+        }
+      } catch (err: any) {
+        toast({
+          variant: "destructive",
+          title: "Sync Failed",
+          description: "Please reconnect to Google Drive to refresh your session.",
+        })
+      } finally {
+        setIsSyncing(false)
+      }
+      return
+    }
+
     setIsSyncing(true)
     try {
       await syncLogsToDrive(accessToken)
@@ -141,7 +160,7 @@ export default function AccountPage() {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      {isDriveConnected && (
+                      {isDriveLinked && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -154,18 +173,18 @@ export default function AccountPage() {
                         </Button>
                       )}
                       <Button 
-                        variant={isDriveConnected ? "ghost" : "outline"} 
+                        variant={isDriveLinked ? "ghost" : "outline"} 
                         size="sm" 
                         onClick={handleConnectDrive}
                         disabled={isConnecting}
                         className={cn(
                           "rounded-lg border-white/10 h-8 px-4 font-bold text-xs",
-                          isDriveConnected ? "text-emerald-400 cursor-default hover:bg-transparent" : "hover:bg-primary hover:text-black hover:border-primary"
+                          isDriveLinked ? "text-emerald-400 cursor-default hover:bg-transparent" : "hover:bg-primary hover:text-black hover:border-primary"
                         )}
                       >
                         {isConnecting ? (
                           <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : isDriveConnected ? (
+                        ) : isDriveLinked ? (
                           <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>
                         ) : (
                           "Connect"

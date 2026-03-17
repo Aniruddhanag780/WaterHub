@@ -20,10 +20,12 @@ type HydrationContextType = {
   logs: WaterLog[]
   goal: number
   reminders: string[]
+  isDriveLinked: boolean
   addLog: (amount: number) => void
   removeLog: (id: string) => void
   setDailyGoal: (amount: number) => void
   setReminders: (times: string[]) => void
+  setDriveLinked: (linked: boolean) => void
   syncLogsToDrive: (accessToken: string) => Promise<void>
   todayTotal: number
   streak: number
@@ -42,6 +44,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [localLogs, setLocalLogs] = useState<WaterLog[]>([])
   const [localGoal, setLocalGoal] = useState<number>(2500)
   const [localReminders, setLocalReminders] = useState<string[]>([])
+  const [localDriveLinked, setLocalDriveLinked] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
 
   // Firestore Data References
@@ -70,9 +73,11 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     const savedLogs = localStorage.getItem("hydrotrack_logs")
     const savedGoal = localStorage.getItem("hydrotrack_goal")
     const savedReminders = localStorage.getItem("hydrotrack_reminders")
+    const savedDriveLinked = localStorage.getItem("hydrotrack_drive_linked")
     if (savedLogs) setLocalLogs(JSON.parse(savedLogs))
     if (savedGoal) setLocalGoal(Number(savedGoal))
     if (savedReminders) setLocalReminders(JSON.parse(savedReminders))
+    if (savedDriveLinked) setLocalDriveLinked(savedDriveLinked === "true")
     setIsHydrated(true)
   }, [])
 
@@ -82,8 +87,9 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("hydrotrack_logs", JSON.stringify(localLogs))
       localStorage.setItem("hydrotrack_goal", localGoal.toString())
       localStorage.setItem("hydrotrack_reminders", JSON.stringify(localReminders))
+      localStorage.setItem("hydrotrack_drive_linked", localDriveLinked.toString())
     }
-  }, [localLogs, localGoal, localReminders, isHydrated, user])
+  }, [localLogs, localGoal, localReminders, localDriveLinked, isHydrated, user])
 
   // User Initialization & Migration Logic
   useEffect(() => {
@@ -100,7 +106,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       }, { merge: true })
 
       // 2. Perform Migration if local data exists
-      if (localLogs.length > 0 || localGoal !== 2500 || localReminders.length > 0) {
+      if (localLogs.length > 0 || localGoal !== 2500 || localReminders.length > 0 || localDriveLinked) {
         // Migrate Logs
         localLogs.forEach(log => {
           const colRef = collection(db, "users", user.uid, "waterIntakes")
@@ -113,20 +119,19 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
           })
         })
 
-        // Migrate Goal/Profile
-        if (localGoal !== 2500) {
-          const pRef = doc(db, "users", user.uid, "profile", "profile")
-          setDocumentNonBlocking(pRef, {
-            dailyGoalMl: localGoal,
-            userId: user.uid,
-            preferredUnit: 'ml',
-            updatedAt: new Date().toISOString(),
-            createdAt: new Date().toISOString(),
-            id: 'profile',
-            wakeUpTime: "07:00",
-            sleepTime: "22:00"
-          }, { merge: true })
-        }
+        // Migrate Goal/Profile (including drive status)
+        const pRef = doc(db, "users", user.uid, "profile", "profile")
+        setDocumentNonBlocking(pRef, {
+          dailyGoalMl: localGoal,
+          isDriveLinked: localDriveLinked,
+          userId: user.uid,
+          preferredUnit: 'ml',
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          id: 'profile',
+          wakeUpTime: "07:00",
+          sleepTime: "22:00"
+        }, { merge: true })
 
         // Migrate Reminders
         if (localReminders.length > 0) {
@@ -150,9 +155,11 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         setLocalLogs([])
         setLocalGoal(2500)
         setLocalReminders([])
+        setLocalDriveLinked(false)
         localStorage.removeItem("hydrotrack_logs")
         localStorage.removeItem("hydrotrack_goal")
         localStorage.removeItem("hydrotrack_reminders")
+        localStorage.removeItem("hydrotrack_drive_linked")
         
         toast({
           title: "Account Synced",
@@ -163,6 +170,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       else if (!isProfileLoading && !firestoreProfile && user) {
         setDocumentNonBlocking(profileRef!, {
           dailyGoalMl: 2500,
+          isDriveLinked: false,
           userId: user.uid,
           preferredUnit: 'ml',
           updatedAt: new Date().toISOString(),
@@ -173,12 +181,13 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         }, { merge: true })
       }
     }
-  }, [user, isHydrated, db, localLogs, localGoal, localReminders, firestoreProfile, isProfileLoading, toast, profileRef])
+  }, [user, isHydrated, db, localLogs, localGoal, localReminders, localDriveLinked, firestoreProfile, isProfileLoading, toast, profileRef])
 
   // Data Aggregation
   const logs = user ? (firestoreLogs || []) : localLogs
   const goal = user ? (firestoreProfile?.dailyGoalMl || localGoal) : localGoal
   const reminders = user ? (firestoreReminders?.optimalReminderTimes || localReminders) : localReminders
+  const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
   const isLoading = isUserLoading || (user ? (isLogsLoading || isProfileLoading || isRemindersLoading) : !isHydrated)
 
   const addLog = (amount: number) => {
@@ -233,6 +242,18 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       }, { merge: true })
     } else {
       setLocalReminders(times)
+    }
+  }
+
+  const setDriveLinked = (linked: boolean) => {
+    if (user && db && profileRef) {
+      setDocumentNonBlocking(profileRef, {
+        isDriveLinked: linked,
+        userId: user.uid,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
+    } else {
+      setLocalDriveLinked(linked)
     }
   }
 
@@ -304,10 +325,12 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         logs,
         goal,
         reminders,
+        isDriveLinked,
         addLog,
         removeLog,
         setDailyGoal,
         setReminders,
+        setDriveLinked,
         syncLogsToDrive,
         todayTotal,
         streak,
