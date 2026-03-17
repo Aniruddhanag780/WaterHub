@@ -50,8 +50,8 @@ export default function LoginPage() {
   const [showWarning, setShowWarning] = useState(false)
   const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
 
-  // Test site key from Google (always passes)
-  const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
+  // Use the provided site key from environment variables
+  const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
 
   useEffect(() => {
     if (!isUserLoading && user) {
