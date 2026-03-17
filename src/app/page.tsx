@@ -8,7 +8,7 @@ import { WaterProgress } from "@/components/WaterProgress"
 import { WaterLogger } from "@/components/WaterLogger"
 import { Card, CardContent } from "@/components/ui/card"
 import { useHydration } from "@/lib/store"
-import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock } from "lucide-react"
+import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert } from "lucide-react"
 import {
   Popover,
   PopoverContent,
@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils"
 export default function Home() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
-  const { todayTotal, goal, streak, reminders, notifications, currentDate } = useHydration()
+  const { todayTotal, goal, streak, reminders, notifications, currentDate, isRinging, stopAlarm } = useHydration()
   
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -39,7 +39,6 @@ export default function Home() {
 
   if (!user) return null
 
-  // Find next reminder using robust time parsing
   const now = new Date()
   const nextReminder = reminders.find(r => {
     const reminderTime = new Date(`2000/01/01 ${r}`)
@@ -47,7 +46,6 @@ export default function Home() {
     return reminderTime > nowTime
   }) || (reminders.length > 0 ? "Done for today" : null)
 
-  // Filter today's notifications using the contextual currentDate
   const todayNotifications = notifications.filter(n => {
     if (!currentDate) return false
     return new Date(n.timestamp).toLocaleDateString() === currentDate
@@ -55,6 +53,31 @@ export default function Home() {
 
   return (
     <div className="space-y-8 max-w-lg mx-auto">
+      {/* Persistent Alarm Ringing UI */}
+      {isRinging && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-md animate-in slide-in-from-top-full duration-500">
+          <Card className="bg-destructive border-white/20 shadow-[0_0_50px_rgba(239,68,68,0.5)] overflow-hidden rounded-[2rem]">
+            <CardContent className="p-6 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+                  <Volume2 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-white font-black text-lg leading-tight">Hydration Alarm!</h3>
+                  <p className="text-white/80 text-xs font-bold uppercase tracking-wider">Logging water silences beep</p>
+                </div>
+              </div>
+              <Button 
+                onClick={stopAlarm}
+                className="bg-white text-destructive hover:bg-white/90 font-black rounded-xl px-6 h-12 shadow-lg transition-all active:scale-95"
+              >
+                SILENCE
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="flex items-start justify-between">
         <div className="space-y-1">
           <h1 className="text-3xl font-extrabold tracking-tight text-white">Today's Intake</h1>
@@ -194,7 +217,14 @@ export default function Home() {
       </Card>
 
       <div className="space-y-4">
-        <h3 className="text-lg font-bold px-1 text-white">Quick Log</h3>
+        <h3 className="text-lg font-bold px-1 text-white flex items-center justify-between">
+          Quick Log
+          {isRinging && (
+            <span className="flex items-center gap-1 text-[10px] text-destructive animate-pulse">
+              <ShieldAlert className="w-3 h-3" /> Log to silence alarm
+            </span>
+          )}
+        </h3>
         <WaterLogger />
       </div>
     </div>

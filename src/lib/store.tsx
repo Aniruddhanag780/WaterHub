@@ -57,6 +57,8 @@ type HydrationContextType = {
   history: Record<string, number>
   isLoading: boolean
   currentDate: string
+  isRinging: boolean
+  stopAlarm: () => void
 }
 
 const HydrationContext = createContext<HydrationContextType | undefined>(undefined)
@@ -76,8 +78,10 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [tick, setTick] = useState(0)
   const [currentDate, setCurrentDate] = useState<string>("")
   const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [isRinging, setIsRinging] = useState(false)
   
   const lastTriggeredTimeRef = useRef<string | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
 
   // Firestore Queries
   const logsQuery = useMemoFirebase(() => {
@@ -181,17 +185,66 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, db, notifications])
 
-  // Alarm Trigger & Auto-Delete Logic
+  const stopAlarm = useCallback(() => {
+    setIsRinging(false)
+  }, [])
+
+  // Procedural Deep Beep Logic
   useEffect(() => {
-    const playAlarmSound = () => {
+    let timeoutId: NodeJS.Timeout
+    let intensity = 0
+
+    const playBeep = () => {
+      if (!isRinging) return
+
       try {
-        const audio = new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3")
-        audio.play().catch(() => {})
-      } catch (e) {}
+        if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)()
+        }
+        
+        const ctx = audioContextRef.current
+        const osc = ctx.createOscillator()
+        const gain = ctx.createGain()
+        
+        // Deep beep: Base 180Hz, slightly increases pitch with intensity
+        osc.type = 'sine'
+        osc.frequency.setValueAtTime(180 + (intensity * 2), ctx.currentTime)
+        
+        // Volume: Starts at 0.2, increases to 0.8 over time
+        const volume = Math.min(0.2 + (intensity * 0.05), 0.8)
+        gain.gain.setValueAtTime(0, ctx.currentTime)
+        gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.1)
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6)
+        
+        osc.connect(gain)
+        gain.connect(ctx.destination)
+        
+        osc.start()
+        osc.stop(ctx.currentTime + 0.7)
+        
+        intensity++
+        
+        // Next beep happens faster over time
+        const nextDelay = Math.max(2000 - (intensity * 100), 400)
+        timeoutId = setTimeout(playBeep, nextDelay)
+      } catch (err) {
+        console.error("Audio trigger failed", err)
+      }
     }
 
+    if (isRinging) {
+      playBeep()
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId)
+    }
+  }, [isRinging])
+
+  // Alarm Trigger Logic
+  useEffect(() => {
     const checkAlarms = () => {
-      if (reminders.length === 0) return
+      if (reminders.length === 0 || isRinging) return
 
       const now = new Date()
       const nowTimeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
@@ -201,7 +254,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       let triggeredReminderStr = ""
 
       reminders.forEach(r => {
-        // Robust time parsing for comparison
         const [rTime, rPeriod] = r.split(' ')
         const [rHour, rMin] = rTime.split(':')
         const paddedR = `${rHour.padStart(2, '0')}:${rMin} ${rPeriod}`
@@ -213,11 +265,8 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         const rDate = new Date(`2000/01/01 ${paddedR}`)
         const nDate = new Date(`2000/01/01 ${paddedNow}`)
 
-        // If the current time is exactly the reminder time or in the past
         if (nDate >= rDate) {
           expiredReminders.push(r)
-          
-          // Trigger alert only on exact match and if not triggered this minute
           if (paddedR === paddedNow && lastTriggeredTimeRef.current !== nowTimeStr) {
             triggerFound = true
             triggeredReminderStr = r
@@ -227,25 +276,24 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
       if (triggerFound) {
         lastTriggeredTimeRef.current = nowTimeStr
-        playAlarmSound()
+        setIsRinging(true)
         toast({
           title: "💧 Time to Hydrate!",
           description: `Scheduled reminder at ${triggeredReminderStr}. Let's hit that goal!`,
-          duration: 10000,
+          duration: 20000,
         })
         addNotification('hydration_reminder', `Hydration Alert: ${triggeredReminderStr}`, 'completed')
       }
 
-      // Auto-delete expired/triggered alarms
       if (expiredReminders.length > 0) {
         const remaining = reminders.filter(r => !expiredReminders.includes(r))
         setReminders(remaining)
       }
     }
 
-    const interval = setInterval(checkAlarms, 30000)
+    const interval = setInterval(checkAlarms, 15000)
     return () => clearInterval(interval)
-  }, [reminders, toast, addNotification, setReminders])
+  }, [reminders, toast, addNotification, setReminders, isRinging])
 
   // Midnight Refresh Logic
   useEffect(() => {
@@ -336,6 +384,8 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   }
 
   const addLog = (amount: number) => {
+    if (isRinging) stopAlarm()
+    
     const timestamp = Date.now()
     const dateStr = new Date(timestamp).toLocaleDateString()
 
@@ -496,6 +546,8 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         history: historyMap,
         isLoading,
         currentDate,
+        isRinging,
+        stopAlarm
       }}
     >
       {children}
