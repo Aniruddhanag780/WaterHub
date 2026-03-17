@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useState } from "react"
@@ -32,7 +33,7 @@ import {
 
 export default function LoginPage() {
   const auth = useAuth()
-  const { user } = useUser()
+  const { user, isUserLoading } = useUser()
   const router = useRouter()
   const { toast } = useToast()
   const [isSignUp, setIsSignUp] = useState(false)
@@ -45,10 +46,10 @@ export default function LoginPage() {
   const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
 
   useEffect(() => {
-    if (user) {
+    if (!isUserLoading && user) {
       router.push("/")
     }
-  }, [user, router])
+  }, [user, isUserLoading, router])
 
   const executeAuth = async () => {
     setLoading(true)
@@ -79,7 +80,6 @@ export default function LoginPage() {
       setPendingAction("signup")
       setShowWarning(true)
     } else {
-      // Normal sign in - no warning needed
       setLoading(true)
       initiateEmailSignIn(auth, email, password)
         .catch((err) => {
@@ -158,6 +158,19 @@ export default function LoginPage() {
     }
   }
 
+  // Show nothing or a full-page loader while checking for an existing session
+  if (isUserLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-[#09090b]">
+        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  // If already logged in, the useEffect will handle redirection. 
+  // We return null here to avoid rendering the form briefly.
+  if (user) return null
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[90vh] px-4 py-10 bg-[#09090b]">
       <div className="w-full max-w-[400px] bg-white rounded-[2rem] p-8 shadow-2xl text-black border border-black/10">
@@ -182,10 +195,10 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-[#f4f4f5] border border-[#e4e4e7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border-[#e4e4e7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
           </div>
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 relative">
             <Label htmlFor="password" title="Password Label" className="font-semibold text-sm">Password</Label>
             <Input 
               id="password" 
@@ -194,17 +207,17 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="bg-[#f4f4f5] border border-[#e4e4e7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
+              className="bg-[#f4f4f5] border-[#e4e4e7] text-black h-12 rounded-xl placeholder:text-muted-foreground/60 focus-visible:ring-1 focus-visible:ring-black/20"
             />
           </div>
 
           {!isSignUp && (
-            <div className="flex justify-end py-1">
+            <div className="flex justify-end mt-2">
               <Button 
                 type="button"
                 variant="link" 
                 onClick={handleForgotPassword}
-                className="text-sm font-medium text-black p-0 h-auto hover:text-black/70 hover:underline transition-colors"
+                className="text-xs font-medium text-black p-0 h-auto hover:text-black/70 underline transition-colors"
               >
                 Forgot password?
               </Button>
@@ -213,7 +226,7 @@ export default function LoginPage() {
           
           <Button 
             type="submit" 
-            className="w-full h-12 rounded-xl bg-[#18181b] hover:bg-[#18181b]/90 text-white font-semibold text-base transition-all active:scale-[0.98]"
+            className="w-full h-12 rounded-xl bg-[#18181b] hover:bg-[#18181b]/90 text-white font-semibold text-base transition-all active:scale-[0.98] mt-2"
             disabled={loading}
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : (isSignUp ? "Sign Up" : "Sign in")}
@@ -279,7 +292,7 @@ export default function LoginPage() {
             <span>{isSignUp ? "Already have an account?" : "Don't have an account?"}</span>
             <Button 
               variant="link" 
-              className="text-black font-bold p-0 h-auto text-sm underline hover:text-black/70" 
+              className="text-muted-foreground font-medium p-0 h-auto text-sm underline hover:text-black/70 transition-colors" 
               onClick={() => setIsSignUp(!isSignUp)}
             >
               {isSignUp ? "Sign In" : "Sign Up"}
