@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Auth,
@@ -10,6 +11,7 @@ import {
   sendPasswordResetEmail,
   sendEmailVerification,
   User,
+  updateEmail,
 } from 'firebase/auth';
 
 /** 
@@ -38,6 +40,13 @@ export function initiateEmailVerification(user: User) {
  */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string) {
   return signInWithEmailAndPassword(authInstance, email, password);
+}
+
+/**
+ * Sends a verification link to update the user's email.
+ */
+export function initiateEmailUpdate(user: User, newEmail: string) {
+  return updateEmail(user, newEmail);
 }
 
 /**

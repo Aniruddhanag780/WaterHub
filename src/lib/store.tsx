@@ -18,7 +18,7 @@ export type WaterLog = {
 
 export type AppNotification = {
   id: string
-  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder' | 'water_added' | 'water_removed' | 'reminders_updated' | 'hydration_reminder_triggered'
+  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder' | 'water_added' | 'water_removed' | 'reminders_updated' | 'hydration_reminder_triggered' | 'email_updated'
   title: string
   status: 'completed' | 'failed'
   timestamp: string

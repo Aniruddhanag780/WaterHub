@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -6,10 +7,25 @@ import { useUser, useAuth } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { UserCircle, Cloud, Check, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2, Power, Settings, Info, Link2Off } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { 
+  UserCircle, 
+  Cloud, 
+  Check, 
+  RefreshCw, 
+  Loader2, 
+  LogOut, 
+  Mail, 
+  Calendar, 
+  Settings2, 
+  Power, 
+  Info, 
+  Link2Off,
+  ShieldCheck
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { connectGoogleDrive } from "@/firebase/non-blocking-login"
+import { connectGoogleDrive, initiateEmailUpdate } from "@/firebase/non-blocking-login"
 import { useToast } from "@/hooks/use-toast"
 import { signOut } from "firebase/auth"
 import {
@@ -44,6 +60,8 @@ export default function AccountPage() {
   const [isSyncing, setIsSyncing] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [showAutoSyncDialog, setShowAutoSyncDialog] = useState(false)
+  const [newEmail, setNewEmail] = useState("")
+  const [isUpdatingEmail, setIsUpdatingEmail] = useState(false)
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -65,6 +83,38 @@ export default function AccountPage() {
   }
 
   if (!user) return null
+
+  const isPasswordUser = user.providerData.some(p => p.providerId === 'password')
+
+  const handleUpdateEmail = async () => {
+    if (!user || !newEmail) return
+    setIsUpdatingEmail(true)
+    try {
+      await initiateEmailUpdate(user, newEmail)
+      toast({
+        title: "Email Updated",
+        description: "Your account email has been successfully changed.",
+      })
+      addNotification('email_updated', 'Account Email Changed', 'completed')
+      setNewEmail("")
+    } catch (err: any) {
+      if (err.code === 'auth/requires-recent-login') {
+        toast({
+          variant: "destructive",
+          title: "Security Timeout",
+          description: "For security, please sign out and sign back in to change your email.",
+        })
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Update Failed",
+          description: err.message,
+        })
+      }
+    } finally {
+      setIsUpdatingEmail(false)
+    }
+  }
 
   const handleConnectDrive = async () => {
     setIsConnecting(true)
@@ -329,6 +379,45 @@ export default function AccountPage() {
                     Sign Out
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+
+        <section className="space-y-4">
+          <h3 className="text-lg font-bold flex items-center gap-2 px-1">
+            <ShieldCheck className="w-5 h-5 text-primary" /> Account Security
+          </h3>
+          <Card className="border-white/10 bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden glass-card">
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Update Email Address</Label>
+                <div className="flex gap-2">
+                  <Input 
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    disabled={!isPasswordUser || isUpdatingEmail}
+                    className="bg-white/5 border-white/10 rounded-xl h-12 text-white placeholder:text-muted-foreground/50"
+                    placeholder={user.email || "Enter new email"}
+                  />
+                  <Button
+                    onClick={handleUpdateEmail}
+                    disabled={!isPasswordUser || isUpdatingEmail || newEmail === user.email || !newEmail}
+                    className="h-12 rounded-xl font-bold px-6 bg-primary text-black hover:bg-primary/90"
+                  >
+                    {isUpdatingEmail ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update"}
+                  </Button>
+                </div>
+                {!isPasswordUser && (
+                  <p className="text-[10px] text-muted-foreground italic font-medium">
+                    Email updates are managed by your social provider (Google/Microsoft).
+                  </p>
+                )}
+                {isPasswordUser && (
+                  <p className="text-[10px] text-muted-foreground italic font-medium">
+                    Note: You may be asked to re-authenticate for security.
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
