@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -272,7 +273,7 @@ export default function AccountPage() {
                     </div>
                     
                     {isDriveLinked && (
-                      <div className="pt-3 border-t border-white/5 flex flex-col gap-3">
+                      <div className="pt-3 border-t border-white/5 flex flex-col gap-4">
                         <div className="flex items-center justify-between group/sync">
                           <div className="flex items-center gap-2">
                             <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
@@ -314,12 +315,11 @@ export default function AccountPage() {
                           </div>
                         </div>
                         <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full text-destructive hover:text-destructive hover:bg-destructive/10 text-[10px] font-bold uppercase tracking-widest h-8"
+                          variant="outline"
+                          className="w-full border-destructive/30 text-destructive hover:bg-destructive hover:text-white rounded-xl h-11 text-xs font-bold uppercase tracking-wider transition-all bg-destructive/5 shadow-sm"
                           onClick={handleUnlinkDrive}
                         >
-                          <Link2Off className="w-3.5 h-3.5 mr-2" />
+                          <Link2Off className="w-4 h-4 mr-2" />
                           Unlink Drive Account
                         </Button>
                       </div>
