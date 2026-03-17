@@ -75,6 +75,7 @@ export default function LoginPage() {
       } else if (pendingAction === "guest") {
         await initiateAnonymousSignIn(auth)
         addNotification('login', 'Guest Session Started', 'completed')
+        router.push("/") // Explicitly redirect after guest session
       }
       setShowWarning(false)
       setPendingAction(null)
@@ -121,6 +122,7 @@ export default function LoginPage() {
         }
 
         addNotification('login', 'Email Login', 'completed')
+        router.push("/") // Explicitly redirect after sign-in
       } catch (err: any) {
         toast({
           variant: "destructive",
@@ -173,6 +175,7 @@ export default function LoginPage() {
     try {
       await initiateGoogleSignIn(auth)
       addNotification('login', 'Google Login', 'completed')
+      router.push("/") // Explicitly redirect after Google sign-in
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
         toast({
@@ -191,6 +194,7 @@ export default function LoginPage() {
     try {
       await initiateMicrosoftSignIn(auth)
       addNotification('login', 'Microsoft Login', 'completed')
+      router.push("/") // Explicitly redirect after Microsoft sign-in
     } catch (err: any) {
       if (err.code !== 'auth/popup-closed-by-user') {
         toast({
