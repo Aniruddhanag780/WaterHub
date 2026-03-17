@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/popover"
 import { Button } from "@/components/ui/button"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
 
 export default function Home() {
   const { user, isUserLoading } = useUser()
@@ -152,22 +153,45 @@ export default function Home() {
         </Card>
       </div>
 
-      {reminders.length > 0 && (
-        <Card className="border-primary/20 bg-primary/5 backdrop-blur-sm rounded-2xl">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-primary text-background rounded-full">
-                <BellRing className="w-4 h-4" />
-              </div>
-              <div>
-                <p className="text-xs font-semibold text-primary/80">Next Reminder</p>
-                <p className="font-bold text-white">{nextReminder || "No more today"}</p>
+      {/* Alarm / Reminder Card */}
+      <Card 
+        className={cn(
+          "border-2 transition-all duration-300 rounded-[2rem] overflow-hidden",
+          reminders.length > 0 
+            ? "border-primary/20 bg-primary/5 shadow-[0_0_30px_rgba(0,229,255,0.05)]" 
+            : "border-white/5 bg-white/5 border-dashed"
+        )}
+      >
+        <CardContent className="p-5 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center transition-colors",
+              reminders.length > 0 ? "bg-primary text-background" : "bg-white/10 text-white/40"
+            )}>
+              <BellRing className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">Hydration Alarm</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-xl font-black text-white">
+                  {reminders.length > 0 ? (nextReminder || "Finished") : "No Alarms Set"}
+                </p>
+                {reminders.length > 0 && (
+                  <span className="text-[10px] font-bold text-primary animate-pulse">LIVE</span>
+                )}
               </div>
             </div>
-            <div className="text-[10px] font-bold text-primary/50 uppercase tracking-tighter">AI Optimized</div>
-          </CardContent>
-        </Card>
-      )}
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => router.push('/reminders')}
+            className="rounded-xl border-white/10 bg-white/5 text-[10px] font-black uppercase tracking-widest hover:bg-primary hover:text-black hover:border-primary transition-all px-4 h-9"
+          >
+            {reminders.length > 0 ? "Manage" : "Configure"}
+          </Button>
+        </CardContent>
+      </Card>
 
       <div className="space-y-4">
         <h3 className="text-lg font-bold px-1 text-white">Quick Log</h3>
