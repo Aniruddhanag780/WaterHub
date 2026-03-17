@@ -30,12 +30,14 @@ type HydrationContextType = {
   goal: number
   reminders: string[]
   isDriveLinked: boolean
+  isAutoSyncEnabled: boolean
   addLog: (amount: number) => void
   removeLog: (id: string) => void
   addNotification: (type: AppNotification['type'], title: string, status: AppNotification['status']) => void
   setDailyGoal: (amount: number) => void
   setReminders: (times: string[]) => void
   setDriveLinked: (linked: boolean) => void
+  setAutoSyncEnabled: (enabled: boolean) => void
   syncLogsToDrive: (accessToken: string) => Promise<void>
   todayTotal: number
   streak: number
@@ -55,6 +57,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [localGoal, setLocalGoal] = useState<number>(2500)
   const [localReminders, setLocalReminders] = useState<string[]>([])
   const [localDriveLinked, setLocalDriveLinked] = useState(false)
+  const [localAutoSyncEnabled, setLocalAutoSyncEnabled] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
 
   const logsQuery = useMemoFirebase(() => {
@@ -90,12 +93,14 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     const savedGoal = localStorage.getItem("hydrotrack_goal")
     const savedReminders = localStorage.getItem("hydrotrack_reminders")
     const savedDriveLinked = localStorage.getItem("hydrotrack_drive_linked")
+    const savedAutoSync = localStorage.getItem("hydrotrack_auto_sync")
     const savedNotifications = localStorage.getItem("hydrotrack_notifications")
     
     if (savedLogs) setLocalLogs(JSON.parse(savedLogs))
     if (savedGoal) setLocalGoal(Number(savedGoal))
     if (savedReminders) setLocalReminders(JSON.parse(savedReminders))
     if (savedDriveLinked) setLocalDriveLinked(savedDriveLinked === "true")
+    if (savedAutoSync) setLocalAutoSyncEnabled(savedAutoSync === "true")
     if (savedNotifications) setLocalNotifications(JSON.parse(savedNotifications))
     
     setIsHydrated(true)
@@ -107,9 +112,10 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem("hydrotrack_goal", localGoal.toString())
       localStorage.setItem("hydrotrack_reminders", JSON.stringify(localReminders))
       localStorage.setItem("hydrotrack_drive_linked", localDriveLinked.toString())
+      localStorage.setItem("hydrotrack_auto_sync", localAutoSyncEnabled.toString())
       localStorage.setItem("hydrotrack_notifications", JSON.stringify(localNotifications))
     }
-  }, [localLogs, localGoal, localReminders, localDriveLinked, localNotifications, isHydrated, user])
+  }, [localLogs, localGoal, localReminders, localDriveLinked, localAutoSyncEnabled, localNotifications, isHydrated, user])
 
   useEffect(() => {
     if (user && isHydrated && db) {
@@ -123,7 +129,22 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString()
       }, { merge: true })
 
-      if (localLogs.length > 0 || localGoal !== 2500 || localReminders.length > 0 || localDriveLinked || localNotifications.length > 0) {
+      if (localLogs.length > 0 || localGoal !== 2500 || localReminders.length > 0 || localDriveLinked || localAutoSyncEnabled || localNotifications.length > 0) {
+        // Migrate Profile Settings
+        const pRef = doc(db, "users", user.uid, "profile", "profile")
+        setDocumentNonBlocking(pRef, {
+          dailyGoalMl: localGoal,
+          isDriveLinked: localDriveLinked,
+          isAutoSyncEnabled: localAutoSyncEnabled,
+          userId: user.uid,
+          preferredUnit: 'ml',
+          updatedAt: new Date().toISOString(),
+          createdAt: new Date().toISOString(),
+          id: 'profile',
+          wakeUpTime: "07:00",
+          sleepTime: "22:00"
+        }, { merge: true })
+
         // Migrate Logs
         localLogs.forEach(log => {
           const colRef = collection(db, "users", user.uid, "waterIntakes")
@@ -148,20 +169,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
           })
         })
 
-        // Migrate Profile Settings
-        const pRef = doc(db, "users", user.uid, "profile", "profile")
-        setDocumentNonBlocking(pRef, {
-          dailyGoalMl: localGoal,
-          isDriveLinked: localDriveLinked,
-          userId: user.uid,
-          preferredUnit: 'ml',
-          updatedAt: new Date().toISOString(),
-          createdAt: new Date().toISOString(),
-          id: 'profile',
-          wakeUpTime: "07:00",
-          sleepTime: "22:00"
-        }, { merge: true })
-
         // Migrate Reminders
         if (localReminders.length > 0) {
           const rRef = doc(db, "users", user.uid, "reminderSetting", "reminderSetting")
@@ -185,12 +192,14 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         setLocalGoal(2500)
         setLocalReminders([])
         setLocalDriveLinked(false)
+        setLocalAutoSyncEnabled(false)
         setLocalNotifications([])
         
         localStorage.removeItem("hydrotrack_logs")
         localStorage.removeItem("hydrotrack_goal")
         localStorage.removeItem("hydrotrack_reminders")
         localStorage.removeItem("hydrotrack_drive_linked")
+        localStorage.removeItem("hydrotrack_auto_sync")
         localStorage.removeItem("hydrotrack_notifications")
         
         toast({
@@ -203,6 +212,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         setDocumentNonBlocking(pRef, {
           dailyGoalMl: 2500,
           isDriveLinked: false,
+          isAutoSyncEnabled: false,
           userId: user.uid,
           preferredUnit: 'ml',
           updatedAt: new Date().toISOString(),
@@ -213,7 +223,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         }, { merge: true })
       }
     }
-  }, [user, isHydrated, db, localLogs, localGoal, localReminders, localDriveLinked, localNotifications, firestoreProfile, isProfileLoading, toast, profileRef])
+  }, [user, isHydrated, db, localLogs, localGoal, localReminders, localDriveLinked, localAutoSyncEnabled, localNotifications, firestoreProfile, isProfileLoading, toast, profileRef])
 
   const isLoading = isUserLoading || (user ? (isLogsLoading || isProfileLoading || isRemindersLoading || isNotificationsLoading) : !isHydrated)
   
@@ -222,6 +232,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const goal = user ? (firestoreProfile?.dailyGoalMl || localGoal) : localGoal
   const reminders = user ? (firestoreReminders?.optimalReminderTimes || localReminders) : localReminders
   const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
+  const isAutoSyncEnabled = user ? (firestoreProfile?.isAutoSyncEnabled || false) : localAutoSyncEnabled
 
   const addNotification = (type: AppNotification['type'], title: string, status: AppNotification['status']) => {
     const timestamp = new Date().toISOString()
@@ -317,6 +328,18 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
+  const setAutoSyncEnabled = (enabled: boolean) => {
+    if (user && db && profileRef) {
+      setDocumentNonBlocking(profileRef, {
+        isAutoSyncEnabled: enabled,
+        userId: user.uid,
+        updatedAt: new Date().toISOString(),
+      }, { merge: true })
+    } else {
+      setLocalAutoSyncEnabled(enabled)
+    }
+  }
+
   const syncLogsToDrive = async (accessToken: string) => {
     try {
       const backupData = {
@@ -389,12 +412,14 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         goal,
         reminders,
         isDriveLinked,
+        isAutoSyncEnabled,
         addLog,
         removeLog,
         addNotification,
         setDailyGoal,
         setReminders,
         setDriveLinked,
+        setAutoSyncEnabled,
         syncLogsToDrive,
         todayTotal,
         streak,

@@ -7,23 +7,34 @@ import { useUser, useAuth } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { UserCircle, ShieldCheck, Cloud, Check, AlertCircle, RefreshCw, Loader2, LogOut, Mail, Calendar } from "lucide-react"
+import { UserCircle, ShieldCheck, Cloud, Check, AlertCircle, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { signInWithGoogleForDrive } from "@/firebase/non-blocking-login"
 import { useToast } from "@/hooks/use-toast"
 import { signOut } from "firebase/auth"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 export default function AccountPage() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
-  const { isDriveLinked, setDriveLinked, syncLogsToDrive, isLoading: isHydrationLoading, addNotification } = useHydration()
+  const { isDriveLinked, setDriveLinked, isAutoSyncEnabled, setAutoSyncEnabled, syncLogsToDrive, isLoading: isHydrationLoading, addNotification } = useHydration()
   const auth = useAuth()
   const { toast } = useToast()
   
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
+  const [showAutoSyncDialog, setShowAutoSyncDialog] = useState(false)
 
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -48,6 +59,7 @@ export default function AccountPage() {
       if (token) {
         setAccessToken(token)
         setDriveLinked(true)
+        setShowAutoSyncDialog(true)
         toast({
           title: "Google Drive Connected",
           description: "Your connection is now saved to your account.",
@@ -96,12 +108,8 @@ export default function AccountPage() {
 
   const handleLogout = async () => {
     try {
-      // Log the logout action before actual sign out
       addNotification('logout', 'Account Sign Out', 'completed')
-      
-      // Delay slightly to ensure Firestore operation is queued
       await new Promise(resolve => setTimeout(resolve, 500))
-      
       await signOut(auth)
       router.push("/login")
       toast({
@@ -155,48 +163,70 @@ export default function AccountPage() {
               <div className="pt-4 border-t border-white/5 space-y-4">
                 <div className="flex flex-col gap-3">
                   <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Cloud Sync</Label>
-                  <div className="flex items-center justify-between bg-white/5 p-4 rounded-xl border border-white/5 group hover:bg-white/10 transition-all">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
-                        <Cloud className="w-5 h-5" />
+                  <div className="flex flex-col gap-2 bg-white/5 p-4 rounded-xl border border-white/5 group hover:bg-white/10 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
+                          <Cloud className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-white">Google Drive</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">External data backup</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-sm font-bold text-white">Google Drive</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">External data backup</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      {isDriveLinked && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={handleSyncNow}
-                          disabled={isSyncing}
-                          className="rounded-lg border-white/10 h-8 px-4 font-bold text-xs bg-white/5 hover:bg-primary hover:text-black"
+                      <div className="flex gap-2">
+                        {isDriveLinked && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleSyncNow}
+                            disabled={isSyncing}
+                            className="rounded-lg border-white/10 h-8 px-4 font-bold text-xs bg-white/5 hover:bg-primary hover:text-black"
+                          >
+                            {isSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
+                            Sync
+                          </Button>
+                        )}
+                        <Button 
+                          variant={isDriveLinked ? "ghost" : "outline"} 
+                          size="sm" 
+                          onClick={isDriveLinked ? undefined : handleConnectDrive}
+                          disabled={isConnecting}
+                          className={cn(
+                            "rounded-lg border-white/10 h-8 px-4 font-bold text-xs",
+                            isDriveLinked ? "text-emerald-400 cursor-default hover:bg-transparent" : "hover:bg-primary hover:text-black hover:border-primary"
+                          )}
                         >
-                          {isSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
-                          Sync
+                          {isConnecting ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : isDriveLinked ? (
+                            <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>
+                          ) : (
+                            "Connect"
+                          )}
                         </Button>
-                      )}
-                      <Button 
-                        variant={isDriveLinked ? "ghost" : "outline"} 
-                        size="sm" 
-                        onClick={isDriveLinked ? undefined : handleConnectDrive}
-                        disabled={isConnecting}
-                        className={cn(
-                          "rounded-lg border-white/10 h-8 px-4 font-bold text-xs",
-                          isDriveLinked ? "text-emerald-400 cursor-default hover:bg-transparent" : "hover:bg-primary hover:text-black hover:border-primary"
-                        )}
-                      >
-                        {isConnecting ? (
-                          <Loader2 className="w-3 h-3 animate-spin" />
-                        ) : isDriveLinked ? (
-                          <span className="flex items-center gap-1"><Check className="w-3 h-3" /> Connected</span>
-                        ) : (
-                          "Connect"
-                        )}
-                      </Button>
+                      </div>
                     </div>
+                    
+                    {isDriveLinked && (
+                      <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground">Auto-Sync Enabled</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setAutoSyncEnabled(!isAutoSyncEnabled)}
+                          className={cn(
+                            "h-6 px-2 rounded-md text-[10px] font-black uppercase transition-all",
+                            isAutoSyncEnabled ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-muted-foreground"
+                          )}
+                        >
+                          {isAutoSyncEnabled ? "ON" : "OFF"}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -215,6 +245,41 @@ export default function AccountPage() {
           </Card>
         </section>
       </div>
+
+      <AlertDialog open={showAutoSyncDialog} onOpenChange={setShowAutoSyncDialog}>
+        <AlertDialogContent className="bg-white rounded-[2.5rem] border-none shadow-2xl p-8 max-w-[90vw] w-[400px]">
+          <AlertDialogHeader className="items-center text-center space-y-4">
+            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center shadow-inner">
+              <Cloud className="w-8 h-8 text-blue-500" />
+            </div>
+            <AlertDialogTitle className="text-2xl font-black text-slate-900 uppercase italic tracking-tight">Enable Auto-Sync?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-600 text-sm font-medium leading-relaxed">
+              To keep your hydration data safe, we recommend turning on <strong>Auto-Sync</strong>. Your history will be automatically backed up to Google Drive every day before midnight.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-col gap-3 mt-6">
+            <AlertDialogAction 
+              onClick={() => {
+                setAutoSyncEnabled(true)
+                setShowAutoSyncDialog(false)
+                toast({
+                  title: "Auto-Sync Enabled",
+                  description: "Your data will now back up automatically.",
+                })
+              }}
+              className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-black font-bold text-base transition-all active:scale-[0.98] border-none"
+            >
+              Turn On Auto-Sync
+            </AlertDialogAction>
+            <AlertDialogCancel 
+              className="w-full h-12 rounded-xl border-slate-200 bg-white text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-900"
+              onClick={() => setShowAutoSyncDialog(false)}
+            >
+              Maybe Later
+            </AlertDialogCancel>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
