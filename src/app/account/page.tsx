@@ -7,7 +7,7 @@ import { useUser, useAuth } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { UserCircle, ShieldCheck, Cloud, Check, AlertCircle, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2 } from "lucide-react"
+import { UserCircle, Cloud, Check, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2, Power } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { connectGoogleDrive } from "@/firebase/non-blocking-login"
@@ -27,11 +27,15 @@ import {
 export default function AccountPage() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
-  const { isDriveLinked, setDriveLinked, isAutoSyncEnabled, setAutoSyncEnabled, syncLogsToDrive, isLoading: isHydrationLoading, addNotification } = useHydration()
+  const { 
+    isDriveLinked, setDriveLinked, 
+    isAutoSyncEnabled, setAutoSyncEnabled, 
+    syncLogsToDrive, isLoading: isHydrationLoading, 
+    addNotification, accessToken, setAccessToken 
+  } = useHydration()
   const auth = useAuth()
   const { toast } = useToast()
   
-  const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isSyncing, setIsSyncing] = useState(false)
   const [isConnecting, setIsConnecting] = useState(false)
   const [showAutoSyncDialog, setShowAutoSyncDialog] = useState(false)
@@ -45,7 +49,12 @@ export default function AccountPage() {
   if (isUserLoading || isHydrationLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+        <div className="relative">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-2 h-2 bg-primary rounded-full animate-ping" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -81,13 +90,14 @@ export default function AccountPage() {
   }
 
   const handleSyncNow = async () => {
-    if (!accessToken) {
+    let tokenToUse = accessToken
+    if (!tokenToUse) {
       setIsSyncing(true)
       try {
         const token = await connectGoogleDrive(auth)
         if (token) {
+          tokenToUse = token
           setAccessToken(token)
-          await syncLogsToDrive(token)
         }
       } catch (err: any) {
         toast({
@@ -95,15 +105,14 @@ export default function AccountPage() {
           title: "Sync Failed",
           description: "Please reconnect to Google Drive to refresh your backup session.",
         })
-      } finally {
         setIsSyncing(false)
+        return
       }
-      return
     }
 
     setIsSyncing(true)
     try {
-      await syncLogsToDrive(accessToken)
+      if (tokenToUse) await syncLogsToDrive(tokenToUse)
     } finally {
       setIsSyncing(false)
     }
@@ -129,7 +138,7 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="space-y-8 max-w-lg mx-auto pb-10 text-white">
+    <div className="space-y-8 max-w-lg mx-auto pb-10 text-white animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-1">
         <h1 className="text-3xl font-extrabold tracking-tight">Account</h1>
         <p className="text-muted-foreground font-medium">Your personal profile and cloud backup settings.</p>
@@ -140,14 +149,14 @@ export default function AccountPage() {
           <h3 className="text-lg font-bold flex items-center gap-2 px-1">
             <UserCircle className="w-5 h-5 text-primary" /> Profile Details
           </h3>
-          <Card className="border-white/10 bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl">
+          <Card className="border-white/10 bg-white/5 backdrop-blur-md rounded-2xl overflow-hidden shadow-2xl glass-card">
             <CardContent className="pt-6 space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 shadow-inner">
+                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border-2 border-primary/20 shadow-inner group">
                   {user.photoURL ? (
-                    <img src={user.photoURL} alt="Profile" className="w-full h-full rounded-2xl object-cover" />
+                    <img src={user.photoURL} alt="Profile" className="w-full h-full rounded-2xl object-cover transition-transform group-hover:scale-110" />
                   ) : (
-                    <UserCircle className="w-10 h-10 text-primary" />
+                    <UserCircle className="w-10 h-10 text-primary transition-transform group-hover:scale-110" />
                   )}
                 </div>
                 <div className="flex-1">
@@ -166,7 +175,7 @@ export default function AccountPage() {
               <div className="pt-4 border-t border-white/5 space-y-4">
                 <div className="flex flex-col gap-3">
                   <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Service Connections</Label>
-                  <div className="flex flex-col gap-2 bg-white/5 p-4 rounded-xl border border-white/5 group hover:bg-white/10 transition-all">
+                  <div className="flex flex-col gap-2 bg-white/5 p-4 rounded-xl border border-white/5 group hover:bg-white/10 transition-all shadow-inner">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
@@ -184,7 +193,7 @@ export default function AccountPage() {
                             size="sm"
                             onClick={handleSyncNow}
                             disabled={isSyncing}
-                            className="rounded-lg border-white/10 h-8 px-4 font-bold text-xs bg-white/5 hover:bg-primary hover:text-black"
+                            className="rounded-lg border-white/10 h-8 px-4 font-bold text-xs bg-white/5 hover:bg-primary hover:text-black transition-all"
                           >
                             {isSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
                             Sync Now
@@ -196,7 +205,7 @@ export default function AccountPage() {
                           onClick={isDriveLinked ? undefined : handleConnectDrive}
                           disabled={isConnecting}
                           className={cn(
-                            "rounded-lg border-white/10 h-8 px-4 font-bold text-xs",
+                            "rounded-lg border-white/10 h-8 px-4 font-bold text-xs transition-all",
                             isDriveLinked ? "text-emerald-400 cursor-default hover:bg-transparent" : "hover:bg-primary hover:text-black hover:border-primary"
                           )}
                         >
@@ -212,22 +221,45 @@ export default function AccountPage() {
                     </div>
                     
                     {isDriveLinked && (
-                      <div className="pt-3 border-t border-white/5 flex items-center justify-between">
+                      <div className="pt-3 border-t border-white/5 flex items-center justify-between group/sync">
                         <div className="flex items-center gap-2">
                           <Settings2 className="w-3.5 h-3.5 text-muted-foreground" />
-                          <span className="text-[10px] font-bold uppercase text-muted-foreground">Auto-Backup Enabled</span>
+                          <span className="text-[10px] font-bold uppercase text-muted-foreground">Auto-Backup</span>
                         </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setAutoSyncEnabled(!isAutoSyncEnabled)}
-                          className={cn(
-                            "h-6 px-2 rounded-md text-[10px] font-black uppercase transition-all",
-                            isAutoSyncEnabled ? "bg-emerald-500/20 text-emerald-400" : "bg-white/5 text-muted-foreground"
+                        <div className="flex items-center gap-2">
+                          {isAutoSyncEnabled ? (
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => {
+                                setAutoSyncEnabled(false)
+                                toast({
+                                  title: "Auto-Sync Disabled",
+                                  description: "Manual backups are still available.",
+                                })
+                              }}
+                              className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                            >
+                              <Power className="w-3 h-3" />
+                              Turn Off
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setAutoSyncEnabled(true)
+                                toast({
+                                  title: "Auto-Sync Enabled",
+                                  description: "Daily midnight backups are now active.",
+                                })
+                              }}
+                              className="h-8 px-3 rounded-lg text-[10px] font-bold uppercase border-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-black transition-all"
+                            >
+                              Enable
+                            </Button>
                           )}
-                        >
-                          {isAutoSyncEnabled ? "ON" : "OFF"}
-                        </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -236,7 +268,7 @@ export default function AccountPage() {
                 <div className="pt-2">
                   <Button 
                     variant="destructive" 
-                    className="w-full h-12 rounded-xl font-bold flex items-center justify-center gap-2 group transition-all"
+                    className="w-full h-12 rounded-xl font-bold flex items-center justify-center gap-2 group transition-all hover:bg-destructive/90 active:scale-[0.98] shadow-lg"
                     onClick={handleLogout}
                   >
                     <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
@@ -275,7 +307,7 @@ export default function AccountPage() {
               Turn On Auto-Sync
             </AlertDialogAction>
             <AlertDialogCancel 
-              className="w-full h-12 rounded-xl border-slate-200 bg-white text-slate-500 font-bold hover:bg-slate-50 hover:text-slate-900"
+              className="w-full h-12 rounded-xl border-slate-200 bg-white text-slate-900 font-bold hover:bg-slate-50 hover:text-slate-900"
               onClick={() => setShowAutoSyncDialog(false)}
             >
               Maybe Later

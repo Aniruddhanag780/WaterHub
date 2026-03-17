@@ -42,6 +42,8 @@ type HydrationContextType = {
   reminders: string[]
   isDriveLinked: boolean
   isAutoSyncEnabled: boolean
+  accessToken: string | null
+  setAccessToken: (token: string | null) => void
   addLog: (amount: number) => void
   removeLog: (id: string) => void
   addNotification: (type: AppNotification['type'], title: string, status: AppNotification['status']) => void
@@ -73,6 +75,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false)
   const [tick, setTick] = useState(0) // Used for midnight refresh
   const [currentDate, setCurrentDate] = useState<string>("")
+  const [accessToken, setAccessToken] = useState<string | null>(null)
 
   // Firestore Queries
   const logsQuery = useMemoFirebase(() => {
@@ -109,9 +112,25 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const { data: firestoreProfile, isLoading: isProfileLoading } = useDoc<any>(profileRef)
   const { data: firestoreReminders, isLoading: isRemindersLoading } = useDoc<any>(reminderRef)
 
-  // Midnight Refresh Logic
+  const syncLogsToDrive = async (tokenToUse: string) => {
+    try {
+      const backupData = {
+        userId: user?.uid || 'guest',
+        backupDate: new Date().toISOString(),
+        logs,
+        goal,
+        reminders
+      }
+      await GoogleDriveService.uploadBackup(tokenToUse, `hydrotrack_backup_${new Date().toISOString().split('T')[0]}.json`, backupData)
+      return true
+    } catch (error: any) {
+      console.error("Backup failed", error)
+      return false
+    }
+  }
+
+  // Midnight Refresh & Auto-Sync Logic
   useEffect(() => {
-    // Initial date set to avoid hydration mismatch
     const today = new Date().toLocaleDateString()
     setCurrentDate(today)
 
@@ -119,18 +138,30 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0)
     const msToMidnight = midnight.getTime() - now.getTime()
 
-    const timeout = setTimeout(() => {
+    const timeout = setTimeout(async () => {
+      // 1. Perform Auto-Sync if enabled before refreshing
+      if (isAutoSyncEnabled && accessToken) {
+        const success = await syncLogsToDrive(accessToken)
+        if (success) {
+          toast({
+            title: "Cloud Backup Complete",
+            description: "Your data was automatically saved to Google Drive at midnight.",
+          })
+        }
+      }
+
+      // 2. Refresh Date
       const nextDate = new Date().toLocaleDateString()
       setCurrentDate(nextDate)
       setTick(prev => prev + 1)
       toast({
         title: "New Day Started",
-        description: "Your hydration goal and notification feed have been reset.",
+        description: "Your hydration goal and activity feed have been reset.",
       })
     }, msToMidnight + 100)
 
     return () => clearTimeout(timeout)
-  }, [tick, toast])
+  }, [tick, toast, isAutoSyncEnabled, accessToken])
 
   // Local Storage Hydration
   useEffect(() => {
@@ -155,7 +186,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (user && isHydrated && db) {
       if (localLogs.length > 0 || localGoal !== 2500 || localReminders.length > 0 || localDriveLinked || localAutoSyncEnabled || localNotifications.length > 0) {
-        // Migration logic...
         setLocalLogs([])
         setLocalGoal(2500)
         setLocalReminders([])
@@ -189,7 +219,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     const summaryId = date.replace(/\//g, '-')
     const summaryRef = doc(db, "users", user.uid, "dailySummaries", summaryId)
 
-    // Using a non-blocking set with merge
     const logsForDay = logs.filter(l => new Date(l.timestamp).toLocaleDateString() === date)
     const newTotal = logsForDay.reduce((acc, l) => acc + (l.amountMl ?? l.amount ?? 0), 0) + amountChange
 
@@ -317,29 +346,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const syncLogsToDrive = async (accessToken: string) => {
-    try {
-      const backupData = {
-        userId: user?.uid || 'guest',
-        backupDate: new Date().toISOString(),
-        logs,
-        goal,
-        reminders
-      }
-      await GoogleDriveService.uploadBackup(accessToken, `hydrotrack_backup_${new Date().toISOString().split('T')[0]}.json`, backupData)
-      toast({
-        title: "Backup successful",
-        description: "Your hydration history has been saved to Google Drive.",
-      })
-    } catch (error: any) {
-      toast({
-        variant: "destructive",
-        title: "Backup failed",
-        description: error.message || "Could not save to Google Drive.",
-      })
-    }
-  }
-
   const todayTotal = logs
     .filter((log) => {
       if (!currentDate) return false
@@ -389,6 +395,8 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         reminders,
         isDriveLinked,
         isAutoSyncEnabled,
+        accessToken,
+        setAccessToken,
         addLog,
         removeLog,
         addNotification,
@@ -396,7 +404,21 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         setReminders,
         setDriveLinked,
         setAutoSyncEnabled,
-        syncLogsToDrive,
+        syncLogsToDrive: async (token) => {
+          const success = await syncLogsToDrive(token)
+          if (success) {
+            toast({
+              title: "Backup successful",
+              description: "Your hydration history has been saved to Google Drive.",
+            })
+          } else {
+            toast({
+              variant: "destructive",
+              title: "Backup failed",
+              description: "Could not save to Google Drive.",
+            })
+          }
+        },
         todayTotal,
         streak,
         history,
