@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useAuth } from "@/firebase"
 import { 
   initiateEmailSignIn, 
@@ -14,13 +14,14 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, AlertTriangle } from "lucide-react"
+import { Loader2, User, AlertTriangle, ShieldCheck } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import { useHydration } from "@/lib/store"
+import ReCAPTCHA from "react-google-recaptcha"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,10 +43,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
+  const recaptchaRef = useRef<ReCAPTCHA>(null)
   
   // Warning Dialog State
   const [showWarning, setShowWarning] = useState(false)
   const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
+
+  // Test site key from Google (always passes)
+  const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -54,6 +60,15 @@ export default function LoginPage() {
   }, [user, isUserLoading, router])
 
   const executeAuth = async () => {
+    if (!captchaToken) {
+      toast({
+        variant: "destructive",
+        title: "Security Check Required",
+        description: "Please complete the reCAPTCHA to verify you are not a bot.",
+      })
+      return
+    }
+
     setLoading(true)
     try {
       if (pendingAction === "signup") {
@@ -71,6 +86,9 @@ export default function LoginPage() {
           ? "This sign-in method is not enabled in your Firebase Console."
           : err.message,
       })
+      // Reset captcha on failure
+      recaptchaRef.current?.reset()
+      setCaptchaToken(null)
     } finally {
       setLoading(false)
       setShowWarning(false)
@@ -80,6 +98,16 @@ export default function LoginPage() {
 
   const handleAuthAttempt = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (!captchaToken) {
+      toast({
+        variant: "destructive",
+        title: "Security Check Required",
+        description: "Please complete the reCAPTCHA challenge first.",
+      })
+      return
+    }
+
     if (isSignUp) {
       setPendingAction("signup")
       setShowWarning(true)
@@ -96,6 +124,9 @@ export default function LoginPage() {
             description: err.message,
           })
           setLoading(false)
+          // Reset captcha on failure
+          recaptchaRef.current?.reset()
+          setCaptchaToken(null)
         })
     }
   }
@@ -131,11 +162,27 @@ export default function LoginPage() {
   }
 
   const handleGuestAttempt = () => {
+    if (!captchaToken) {
+      toast({
+        variant: "destructive",
+        title: "Security Check Required",
+        description: "Please complete the reCAPTCHA before entering as a guest.",
+      })
+      return
+    }
     setPendingAction("guest")
     setShowWarning(true)
   }
 
   const handleGoogleSignIn = async () => {
+    if (!captchaToken) {
+      toast({
+        variant: "destructive",
+        title: "Security Check Required",
+        description: "Please complete the reCAPTCHA first.",
+      })
+      return
+    }
     setLoading(true)
     try {
       await initiateGoogleSignIn(auth)
@@ -146,12 +193,22 @@ export default function LoginPage() {
         title: "Authentication Error",
         description: err.message,
       })
+      recaptchaRef.current?.reset()
+      setCaptchaToken(null)
     } finally {
       setLoading(false)
     }
   }
 
   const handleMicrosoftSignIn = async () => {
+    if (!captchaToken) {
+      toast({
+        variant: "destructive",
+        title: "Security Check Required",
+        description: "Please complete the reCAPTCHA first.",
+      })
+      return
+    }
     setLoading(true)
     try {
       await initiateMicrosoftSignIn(auth)
@@ -162,9 +219,15 @@ export default function LoginPage() {
         title: "Authentication Error",
         description: err.message,
       })
+      recaptchaRef.current?.reset()
+      setCaptchaToken(null)
     } finally {
       setLoading(false)
     }
+  }
+
+  const onCaptchaChange = (token: string | null) => {
+    setCaptchaToken(token)
   }
 
   if (isUserLoading) {
@@ -229,11 +292,20 @@ export default function LoginPage() {
               </Button>
             </div>
           )}
+
+          <div className="py-2 flex justify-center">
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={RECAPTCHA_SITE_KEY}
+              onChange={onCaptchaChange}
+              theme="light"
+            />
+          </div>
           
           <Button 
             type="submit" 
-            className="w-full h-12 rounded-xl bg-[#18181b] hover:bg-[#18181b]/90 text-white font-semibold text-base transition-all active:scale-[0.98] mt-2"
-            disabled={loading}
+            className="w-full h-12 rounded-xl bg-[#18181b] hover:bg-[#18181b]/90 text-white font-semibold text-base transition-all active:scale-[0.98] mt-2 disabled:opacity-50"
+            disabled={loading || !captchaToken}
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : (isSignUp ? "Sign Up" : "Sign in")}
           </Button>
@@ -251,9 +323,9 @@ export default function LoginPage() {
         <div className="grid grid-cols-3 gap-2 mb-8">
           <Button 
             variant="outline" 
-            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
+            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all disabled:opacity-50" 
             onClick={handleGoogleSignIn} 
-            disabled={loading}
+            disabled={loading || !captchaToken}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
               <>
@@ -270,9 +342,9 @@ export default function LoginPage() {
           
           <Button 
             variant="outline" 
-            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
+            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all disabled:opacity-50" 
             onClick={handleMicrosoftSignIn} 
-            disabled={loading}
+            disabled={loading || !captchaToken}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
               <>
@@ -289,9 +361,9 @@ export default function LoginPage() {
 
           <Button 
             variant="outline" 
-            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all" 
+            className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all disabled:opacity-50" 
             onClick={handleGuestAttempt}
-            disabled={loading}
+            disabled={loading || !captchaToken}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
               <>
