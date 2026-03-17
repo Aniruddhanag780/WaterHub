@@ -55,6 +55,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
   const profileRef = useMemoFirebase(() => {
     if (!db || !user) return null
+    // Aligning to 1:1 document pattern as defined in backend/rules
     return doc(db, "users", user.uid, "profile", "profile")
   }, [db, user])
 
@@ -184,11 +185,12 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   }, [user, isHydrated, db, localLogs, localGoal, localReminders, localDriveLinked, firestoreProfile, isProfileLoading, toast, profileRef])
 
   // Data Aggregation
+  const isLoading = isUserLoading || (user ? (isLogsLoading || isProfileLoading || isRemindersLoading) : !isHydrated)
+  
   const logs = user ? (firestoreLogs || []) : localLogs
   const goal = user ? (firestoreProfile?.dailyGoalMl || localGoal) : localGoal
   const reminders = user ? (firestoreReminders?.optimalReminderTimes || localReminders) : localReminders
   const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
-  const isLoading = isUserLoading || (user ? (isLogsLoading || isProfileLoading || isRemindersLoading) : !isHydrated)
 
   const addLog = (amount: number) => {
     const timestamp = Date.now()

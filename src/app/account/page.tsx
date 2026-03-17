@@ -17,7 +17,7 @@ import { signOut } from "firebase/auth"
 export default function AccountPage() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
-  const { isDriveLinked, setDriveLinked, syncLogsToDrive } = useHydration()
+  const { isDriveLinked, setDriveLinked, syncLogsToDrive, isLoading: isHydrationLoading } = useHydration()
   const auth = useAuth()
   const { toast } = useToast()
   
@@ -31,7 +31,8 @@ export default function AccountPage() {
     }
   }, [user, isUserLoading, router])
 
-  if (isUserLoading) {
+  // Wait for both user auth AND hydration data (Firestore profile)
+  if (isUserLoading || isHydrationLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <Loader2 className="w-10 h-10 animate-spin text-primary" />
@@ -65,7 +66,6 @@ export default function AccountPage() {
   }
 
   const handleSyncNow = async () => {
-    // If we have no local token but user is marked as linked, we need to re-auth briefly to get a fresh token
     if (!accessToken) {
       setIsSyncing(true)
       try {
@@ -175,7 +175,7 @@ export default function AccountPage() {
                       <Button 
                         variant={isDriveLinked ? "ghost" : "outline"} 
                         size="sm" 
-                        onClick={handleConnectDrive}
+                        onClick={isDriveLinked ? undefined : handleConnectDrive}
                         disabled={isConnecting}
                         className={cn(
                           "rounded-lg border-white/10 h-8 px-4 font-bold text-xs",
