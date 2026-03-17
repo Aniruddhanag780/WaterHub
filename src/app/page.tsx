@@ -20,7 +20,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 export default function Home() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
-  const { todayTotal, goal, streak, reminders, notifications } = useHydration()
+  const { todayTotal, goal, streak, reminders, notifications, currentDate } = useHydration()
   
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -45,9 +45,11 @@ export default function Home() {
     return r > currentTimeStr
   }) || reminders[0]
 
-  // Filter today's notifications
-  const today = new Date().toLocaleDateString()
-  const todayNotifications = notifications.filter(n => new Date(n.timestamp).toLocaleDateString() === today)
+  // Filter today's notifications using the contextual currentDate
+  const todayNotifications = notifications.filter(n => {
+    if (!currentDate) return false
+    return new Date(n.timestamp).toLocaleDateString() === currentDate
+  })
 
   return (
     <div className="space-y-8 max-w-lg mx-auto">

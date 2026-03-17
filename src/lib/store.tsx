@@ -54,6 +54,7 @@ type HydrationContextType = {
   streak: number
   history: Record<string, number>
   isLoading: boolean
+  currentDate: string
 }
 
 const HydrationContext = createContext<HydrationContextType | undefined>(undefined)
@@ -71,6 +72,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [localAutoSyncEnabled, setLocalAutoSyncEnabled] = useState(false)
   const [isHydrated, setIsHydrated] = useState(false)
   const [tick, setTick] = useState(0) // Used for midnight refresh
+  const [currentDate, setCurrentDate] = useState<string>("")
 
   // Firestore Queries
   const logsQuery = useMemoFirebase(() => {
@@ -109,15 +111,21 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
   // Midnight Refresh Logic
   useEffect(() => {
+    // Initial date set to avoid hydration mismatch
+    const today = new Date().toLocaleDateString()
+    setCurrentDate(today)
+
     const now = new Date()
     const midnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0)
     const msToMidnight = midnight.getTime() - now.getTime()
 
     const timeout = setTimeout(() => {
+      const nextDate = new Date().toLocaleDateString()
+      setCurrentDate(nextDate)
       setTick(prev => prev + 1)
       toast({
         title: "New Day Started",
-        description: "Your hydration goal has been reset for today.",
+        description: "Your hydration goal and notification feed have been reset.",
       })
     }, msToMidnight + 100)
 
@@ -182,7 +190,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     const summaryRef = doc(db, "users", user.uid, "dailySummaries", summaryId)
 
     // Using a non-blocking set with merge
-    // We calculate the new total based on all logs for that day to ensure accuracy
     const logsForDay = logs.filter(l => new Date(l.timestamp).toLocaleDateString() === date)
     const newTotal = logsForDay.reduce((acc, l) => acc + (l.amountMl ?? l.amount ?? 0), 0) + amountChange
 
@@ -333,11 +340,11 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const todayStr = new Date().toLocaleDateString()
   const todayTotal = logs
     .filter((log) => {
+      if (!currentDate) return false
       const logDate = log.timestamp ? new Date(log.timestamp) : new Date()
-      return logDate.toLocaleDateString() === todayStr
+      return logDate.toLocaleDateString() === currentDate
     })
     .reduce((acc, curr) => acc + (curr.amountMl ?? curr.amount ?? 0), 0)
 
@@ -394,6 +401,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         streak,
         history,
         isLoading,
+        currentDate,
       }}
     >
       {children}
