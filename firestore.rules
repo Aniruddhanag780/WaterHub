@@ -72,7 +72,7 @@ service cloud.firestore {
       /**
        * @description Rules for the DailySummary collection.
        */
-      match /users/{userId}/dailySummaries/{dailySummaryId} {
+      match /dailySummaries/{dailySummaryId} {
         allow get, list: if isOwner(userId);
         allow create: if isOwner(userId) && request.resource.data.userId == userId;
         allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
