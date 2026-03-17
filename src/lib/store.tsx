@@ -1,7 +1,7 @@
 
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from "react"
+import React, { createContext, useContext, useEffect, useState, useRef } from "react"
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase"
 import { collection, doc, query, orderBy, getDoc } from "firebase/firestore"
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates"
@@ -18,7 +18,7 @@ export type WaterLog = {
 
 export type AppNotification = {
   id: string
-  type: 'login' | 'logout' | 'drive_connected' | 'goal_updated'
+  type: 'login' | 'logout' | 'drive_connected' | 'goal_updated' | 'hydration_reminder'
   title: string
   status: 'completed' | 'failed'
   timestamp: string
@@ -76,6 +76,8 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [tick, setTick] = useState(0) // Used for midnight refresh
   const [currentDate, setCurrentDate] = useState<string>("")
   const [accessToken, setAccessToken] = useState<string | null>(null)
+  
+  const lastTriggeredTimeRef = useRef<string | null>(null)
 
   // Firestore Queries
   const logsQuery = useMemoFirebase(() => {
@@ -137,6 +139,45 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       return false
     }
   }
+
+  // Alarm Trigger Logic
+  useEffect(() => {
+    const checkAlarms = () => {
+      const now = new Date()
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
+      
+      // If we already triggered for this specific minute, skip
+      if (lastTriggeredTimeRef.current === timeStr) return
+
+      const matchingReminder = reminders.find(r => {
+        // Handle potential formatting differences (padding hours)
+        const [rTime, rPeriod] = r.split(' ')
+        const [rHour, rMin] = rTime.split(':')
+        const paddedR = `${rHour.padStart(2, '0')}:${rMin} ${rPeriod}`
+        
+        const [cTime, cPeriod] = timeStr.split(' ')
+        const [cHour, cMin] = cTime.split(':')
+        const paddedC = `${cHour.padStart(2, '0')}:${cMin} ${cPeriod}`
+        
+        return paddedR === paddedC
+      })
+
+      if (matchingReminder) {
+        lastTriggeredTimeRef.current = timeStr
+        
+        toast({
+          title: "💧 Time to Hydrate!",
+          description: `Scheduled reminder at ${matchingReminder}. Let's hit that goal!`,
+          duration: 10000,
+        })
+        
+        addNotification('hydration_reminder', `Hydration Alert: ${matchingReminder}`, 'completed')
+      }
+    }
+
+    const interval = setInterval(checkAlarms, 30000) // Check every 30 seconds
+    return () => clearInterval(interval)
+  }, [reminders, toast])
 
   // Midnight Refresh & Auto-Sync Logic
   useEffect(() => {
