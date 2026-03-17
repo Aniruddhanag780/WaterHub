@@ -25,7 +25,7 @@ export function Navigation() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 flex items-center h-20 px-2 md:relative md:border-t-0 md:bg-transparent md:h-24 md:px-0">
       {/* Desktop Logo - Hidden on Mobile */}
-      <div className="hidden md:flex items-center gap-3 mr-auto text-primary group cursor-pointer">
+      <div className="hidden md:flex items-center gap-2 mr-auto text-primary group cursor-pointer">
         <div className="p-2.5 bg-primary/10 rounded-2xl transition-all group-hover:scale-110 group-hover:bg-primary/20">
           <Droplet className="w-6 h-6 fill-current" />
         </div>
