@@ -335,9 +335,22 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     if (savedDriveLinked) setLocalDriveLinked(savedDriveLinked === "true")
     if (savedAutoSync) setLocalAutoSyncEnabled(savedAutoSync === "true")
     if (savedNotifications) setLocalNotifications(JSON.parse(savedNotifications))
+
+    // Restore access token from session storage if it exists
+    const savedToken = sessionStorage.getItem("waterhub_access_token")
+    if (savedToken) setAccessToken(savedToken)
     
     setIsHydrated(true)
   }, [])
+
+  // Persist access token to session storage when it changes
+  useEffect(() => {
+    if (accessToken) {
+      sessionStorage.setItem("waterhub_access_token", accessToken)
+    } else {
+      sessionStorage.removeItem("waterhub_access_token")
+    }
+  }, [accessToken])
 
   // Sync Guest Data to Firestore
   useEffect(() => {

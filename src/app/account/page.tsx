@@ -6,7 +6,7 @@ import { useUser, useAuth } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { UserCircle, Cloud, Check, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2, Power, Settings } from "lucide-react"
+import { UserCircle, Cloud, Check, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2, Power, Settings, Info } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { connectGoogleDrive } from "@/firebase/non-blocking-login"
@@ -22,6 +22,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function AccountPage() {
   const { user, isUserLoading } = useUser()
@@ -92,6 +98,9 @@ export default function AccountPage() {
 
   const handleSyncNow = async () => {
     let tokenToUse = accessToken
+    
+    // If we don't have a token in the current session, we must refresh it with a popup.
+    // This happens after page refreshes or if the session expired.
     if (!tokenToUse) {
       setIsSyncing(true)
       try {
@@ -194,9 +203,25 @@ export default function AccountPage() {
                         <div className="p-2 bg-blue-500/20 text-blue-400 rounded-lg group-hover:scale-110 transition-transform">
                           <Cloud className="w-5 h-5" />
                         </div>
-                        <div>
-                          <p className="text-sm font-bold text-white">Google Drive</p>
-                          <p className="text-[10px] text-muted-foreground font-medium">Backup service link</p>
+                        <div className="space-y-0.5">
+                          <p className="text-sm font-bold text-white flex items-center gap-1.5">
+                            Google Drive 
+                            {isDriveLinked && (
+                              <TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Info className="w-3 h-3 text-muted-foreground hover:text-primary transition-colors" />
+                                  </TooltipTrigger>
+                                  <TooltipContent className="bg-slate-900 border-white/10 text-[10px] max-w-[180px]">
+                                    Cloud linking is permanent. Temporary popups only appear to refresh your active backup session.
+                                  </TooltipContent>
+                                </Tooltip>
+                              </TooltipProvider>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-tighter">
+                            {accessToken ? "Session Active" : "Session Required"}
+                          </p>
                         </div>
                       </div>
                       <div className="flex gap-2">
@@ -208,8 +233,13 @@ export default function AccountPage() {
                             disabled={isSyncing}
                             className="rounded-lg border-white/10 h-8 px-4 font-bold text-xs bg-white/5 hover:bg-primary hover:text-black transition-all"
                           >
-                            {isSyncing ? <Loader2 className="w-3 h-3 animate-spin" /> : <RefreshCw className="w-3 h-3 mr-1" />}
-                            Sync Now
+                            {isSyncing ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : accessToken ? (
+                              <><RefreshCw className="w-3 h-3 mr-1" /> Sync Now</>
+                            ) : (
+                              <><RefreshCw className="w-3 h-3 mr-1" /> Refresh & Sync</>
+                            )}
                           </Button>
                         )}
                         <Button 
