@@ -24,17 +24,17 @@ export function Navigation() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 flex items-center h-20 px-2 md:relative md:border-t-0 md:bg-transparent md:h-24 md:px-0">
-      {/* Desktop Logo - Hidden on Mobile */}
-      <div className="hidden md:flex items-center gap-2 mr-auto text-primary group cursor-pointer">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 flex items-center h-20 px-2 md:relative md:border-t-0 md:bg-transparent md:h-24 md:px-0 md:justify-center md:gap-8">
+      {/* Desktop Logo - Now part of the flex sequence for equal spacing */}
+      <div className="hidden md:flex items-center gap-2 text-primary group cursor-pointer transition-all hover:opacity-80">
         <div className="p-2.5 bg-primary/10 rounded-2xl transition-all group-hover:scale-110 group-hover:bg-primary/20">
           <Droplet className="w-6 h-6 fill-current" />
         </div>
-        <span className="text-2xl font-black tracking-tight text-white uppercase italic ml-[-4px]">WaterHub</span>
+        <span className="text-2xl font-black tracking-tight text-white uppercase italic ml-[-2px]">WaterHub</span>
       </div>
       
-      {/* Navigation Links - Perfect Distribution */}
-      <div className="flex w-full justify-evenly items-center md:w-auto md:justify-end md:gap-4">
+      {/* Navigation Links - Distributed with consistent gaps on desktop */}
+      <div className="flex w-full justify-evenly items-center md:w-auto md:gap-4 lg:gap-8">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
