@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useEffect, useState } from "react"
@@ -76,11 +75,13 @@ export default function AccountPage() {
         addNotification('drive_connected', 'Google Drive Linked', 'completed')
       }
     } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Connection Failed",
-        description: err.message,
-      })
+      if (err.code !== 'auth/popup-closed-by-user') {
+        toast({
+          variant: "destructive",
+          title: "Connection Failed",
+          description: err.message,
+        })
+      }
       if (auth.currentUser) {
         addNotification('drive_connected', 'Google Drive Link Attempt', 'failed')
       }
@@ -100,11 +101,13 @@ export default function AccountPage() {
           setAccessToken(token)
         }
       } catch (err: any) {
-        toast({
-          variant: "destructive",
-          title: "Sync Failed",
-          description: "Please reconnect to Google Drive to refresh your backup session.",
-        })
+        if (err.code !== 'auth/popup-closed-by-user') {
+          toast({
+            variant: "destructive",
+            title: "Sync Failed",
+            description: "Please reconnect to Google Drive to refresh your backup session.",
+          })
+        }
         setIsSyncing(false)
         return
       }

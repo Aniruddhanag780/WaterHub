@@ -1,4 +1,3 @@
-
 "use client"
 
 import { useState, useEffect } from "react"
@@ -140,11 +139,13 @@ export default function LoginPage() {
       await initiateGoogleSignIn(auth)
       addNotification('login', 'Google Login', 'completed')
     } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: err.message,
-      })
+      if (err.code !== 'auth/popup-closed-by-user') {
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: err.message,
+        })
+      }
     } finally {
       setSocialLoading(null)
     }
@@ -156,11 +157,13 @@ export default function LoginPage() {
       await initiateMicrosoftSignIn(auth)
       addNotification('login', 'Microsoft Login', 'completed')
     } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: err.message,
-      })
+      if (err.code !== 'auth/popup-closed-by-user') {
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: err.message,
+        })
+      }
     } finally {
       setSocialLoading(null)
     }
