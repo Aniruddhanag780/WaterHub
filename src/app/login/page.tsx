@@ -1,7 +1,7 @@
 
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useEffect } from "react"
 import { useAuth } from "@/firebase"
 import { 
   initiateEmailSignIn, 
@@ -17,11 +17,10 @@ import { Label } from "@/components/ui/label"
 import { Loader2, User, AlertTriangle, ShieldCheck } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
-import { useEffect } from "react"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import { useHydration } from "@/lib/store"
-import ReCAPTCHA from "react-google-recaptcha"
+import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recaptcha-v3"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,25 +32,21 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-export default function LoginPage() {
+function LoginForm() {
   const auth = useAuth()
   const { user, isUserLoading } = useUser()
   const router = useRouter()
   const { toast } = useToast()
   const { addNotification } = useHydration()
+  const { executeRecaptcha } = useGoogleReCaptcha()
+  
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
-  const [captchaToken, setCaptchaToken] = useState<string | null>(null)
-  const recaptchaRef = useRef<ReCAPTCHA>(null)
   
-  // Warning Dialog State
   const [showWarning, setShowWarning] = useState(false)
   const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
-
-  // Use the provided site key
-  const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
 
   useEffect(() => {
     if (!isUserLoading && user) {
@@ -59,18 +54,36 @@ export default function LoginPage() {
     }
   }, [user, isUserLoading, router])
 
-  const executeAuth = async () => {
-    if (!captchaToken) {
+  const verifyAndExecute = async (actionName: string, callback: () => Promise<void>) => {
+    if (!executeRecaptcha) {
       toast({
         variant: "destructive",
-        title: "Security Check Required",
-        description: "Please complete the reCAPTCHA to verify you are not a bot.",
+        title: "Security Check Unavailable",
+        description: "Recaptcha has not loaded yet. Please try again in a few seconds.",
       })
       return
     }
 
     setLoading(true)
     try {
+      const token = await executeRecaptcha(actionName)
+      if (!token) {
+        throw new Error("Failed to acquire security token.")
+      }
+      await callback()
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Security Error",
+        description: err.message,
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const executeAuth = async () => {
+    await verifyAndExecute(pendingAction === "signup" ? "signup" : "guest_login", async () => {
       if (pendingAction === "signup") {
         await initiateEmailSignUp(auth, email, password)
         addNotification('login', 'New Account Created', 'completed')
@@ -78,56 +91,30 @@ export default function LoginPage() {
         await initiateAnonymousSignIn(auth)
         addNotification('login', 'Guest Session Started', 'completed')
       }
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: err.code === 'auth/operation-not-allowed' 
-          ? "This sign-in method is not enabled in your Firebase Console."
-          : err.message,
-      })
-      // Reset captcha on failure
-      recaptchaRef.current?.reset()
-      setCaptchaToken(null)
-    } finally {
-      setLoading(false)
       setShowWarning(false)
       setPendingAction(null)
-    }
+    })
   }
 
-  const handleAuthAttempt = (e: React.FormEvent) => {
+  const handleAuthAttempt = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!captchaToken) {
-      toast({
-        variant: "destructive",
-        title: "Security Check Required",
-        description: "Please complete the reCAPTCHA challenge first.",
-      })
-      return
-    }
-
     if (isSignUp) {
       setPendingAction("signup")
       setShowWarning(true)
     } else {
-      setLoading(true)
-      initiateEmailSignIn(auth, email, password)
-        .then(() => {
+      await verifyAndExecute("login", async () => {
+        try {
+          await initiateEmailSignIn(auth, email, password)
           addNotification('login', 'Email Login', 'completed')
-        })
-        .catch((err) => {
+        } catch (err: any) {
           toast({
             variant: "destructive",
             title: "Sign In Error",
             description: err.message,
           })
-          setLoading(false)
-          // Reset captcha on failure
-          recaptchaRef.current?.reset()
-          setCaptchaToken(null)
-        })
+        }
+      })
     }
   }
 
@@ -162,72 +149,38 @@ export default function LoginPage() {
   }
 
   const handleGuestAttempt = () => {
-    if (!captchaToken) {
-      toast({
-        variant: "destructive",
-        title: "Security Check Required",
-        description: "Please complete the reCAPTCHA before entering as a guest.",
-      })
-      return
-    }
     setPendingAction("guest")
     setShowWarning(true)
   }
 
   const handleGoogleSignIn = async () => {
-    if (!captchaToken) {
-      toast({
-        variant: "destructive",
-        title: "Security Check Required",
-        description: "Please complete the reCAPTCHA first.",
-      })
-      return
-    }
-    setLoading(true)
-    try {
-      await initiateGoogleSignIn(auth)
-      addNotification('login', 'Google Login', 'completed')
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: err.message,
-      })
-      recaptchaRef.current?.reset()
-      setCaptchaToken(null)
-    } finally {
-      setLoading(false)
-    }
+    await verifyAndExecute("google_login", async () => {
+      try {
+        await initiateGoogleSignIn(auth)
+        addNotification('login', 'Google Login', 'completed')
+      } catch (err: any) {
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: err.message,
+        })
+      }
+    })
   }
 
   const handleMicrosoftSignIn = async () => {
-    if (!captchaToken) {
-      toast({
-        variant: "destructive",
-        title: "Security Check Required",
-        description: "Please complete the reCAPTCHA first.",
-      })
-      return
-    }
-    setLoading(true)
-    try {
-      await initiateMicrosoftSignIn(auth)
-      addNotification('login', 'Microsoft Login', 'completed')
-    } catch (err: any) {
-      toast({
-        variant: "destructive",
-        title: "Authentication Error",
-        description: err.message,
-      })
-      recaptchaRef.current?.reset()
-      setCaptchaToken(null)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const onCaptchaChange = (token: string | null) => {
-    setCaptchaToken(token)
+    await verifyAndExecute("microsoft_login", async () => {
+      try {
+        await initiateMicrosoftSignIn(auth)
+        addNotification('login', 'Microsoft Login', 'completed')
+      } catch (err: any) {
+        toast({
+          variant: "destructive",
+          title: "Authentication Error",
+          description: err.message,
+        })
+      }
+    })
   }
 
   if (isUserLoading) {
@@ -292,20 +245,11 @@ export default function LoginPage() {
               </Button>
             </div>
           )}
-
-          <div className="py-2 flex justify-center">
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={RECAPTCHA_SITE_KEY}
-              onChange={onCaptchaChange}
-              theme="light"
-            />
-          </div>
           
           <Button 
             type="submit" 
             className="w-full h-12 rounded-xl bg-[#18181b] hover:bg-[#18181b]/90 text-white font-semibold text-base transition-all active:scale-[0.98] mt-2 disabled:opacity-50"
-            disabled={loading || !captchaToken}
+            disabled={loading}
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : (isSignUp ? "Sign Up" : "Sign in")}
           </Button>
@@ -325,7 +269,7 @@ export default function LoginPage() {
             variant="outline" 
             className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all disabled:opacity-50" 
             onClick={handleGoogleSignIn} 
-            disabled={loading || !captchaToken}
+            disabled={loading}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
               <>
@@ -344,7 +288,7 @@ export default function LoginPage() {
             variant="outline" 
             className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all disabled:opacity-50" 
             onClick={handleMicrosoftSignIn} 
-            disabled={loading || !captchaToken}
+            disabled={loading}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : (
               <>
@@ -363,7 +307,7 @@ export default function LoginPage() {
             variant="outline" 
             className="h-11 border-[#e4e4e7] rounded-xl bg-white hover:bg-muted/10 text-black flex items-center justify-center gap-2 text-xs font-semibold transition-all disabled:opacity-50" 
             onClick={handleGuestAttempt}
-            disabled={loading || !captchaToken}
+            disabled={loading}
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : (
               <>
@@ -394,7 +338,7 @@ export default function LoginPage() {
       {/* Floating reCAPTCHA Icon Badge */}
       <div className="fixed bottom-4 right-4 z-50 pointer-events-none opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">Protected by reCAPTCHA</span>
+        <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">Score-based Security Active</span>
       </div>
 
       {/* Data Retention Warning Dialog */}
@@ -429,5 +373,15 @@ export default function LoginPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  )
+}
+
+export default function LoginPage() {
+  const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
+
+  return (
+    <GoogleReCaptchaProvider reCaptchaKey={SITE_KEY}>
+      <LoginForm />
+    </GoogleReCaptchaProvider>
   )
 }
