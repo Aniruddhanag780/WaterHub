@@ -7,7 +7,7 @@ import { useUser, useAuth } from "@/firebase"
 import { useHydration } from "@/lib/store"
 import { Card, CardContent } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { UserCircle, Cloud, Check, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2, Power } from "lucide-react"
+import { UserCircle, Cloud, Check, RefreshCw, Loader2, LogOut, Mail, Calendar, Settings2, Power, Settings } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { connectGoogleDrive } from "@/firebase/non-blocking-login"
@@ -139,9 +139,19 @@ export default function AccountPage() {
 
   return (
     <div className="space-y-8 max-w-lg mx-auto pb-10 text-white animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="space-y-1">
-        <h1 className="text-3xl font-extrabold tracking-tight">Account</h1>
-        <p className="text-muted-foreground font-medium">Your personal profile and cloud backup settings.</p>
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-extrabold tracking-tight">Account</h1>
+          <p className="text-muted-foreground font-medium">Your personal profile and backup settings.</p>
+        </div>
+        <Button 
+          variant="outline" 
+          size="icon" 
+          className="rounded-2xl border-white/10 bg-white/5 h-12 w-12 hover:bg-white/10"
+          onClick={() => router.push('/settings')}
+        >
+          <Settings className="w-6 h-6 text-primary" />
+        </Button>
       </div>
 
       <div className="space-y-6">

@@ -4,12 +4,12 @@
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
-import { AlarmManager } from "@/components/AlarmManager"
-import { Bell, Loader2, Info, Sparkles } from "lucide-react"
+import { SmartReminderTool } from "@/components/SmartReminderTool"
+import { Sparkles, Loader2, Info, Bell } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
-export default function RemindersPage() {
+export default function AISuggestionsPage() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
 
@@ -33,50 +33,51 @@ export default function RemindersPage() {
     <div className="space-y-8 max-w-lg mx-auto pb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="space-y-1">
         <h1 className="text-3xl font-extrabold tracking-tight text-white flex items-center gap-3">
-          <Bell className="w-8 h-8 text-primary" /> Manual Alarms
+          <Sparkles className="w-8 h-8 text-primary" /> AI Optimizer
         </h1>
-        <p className="text-muted-foreground font-medium">Create and manage your persistent daily reminders.</p>
+        <p className="text-muted-foreground font-medium">Let intelligence handle your hydration frequency.</p>
       </div>
 
       <div className="space-y-10">
-        {/* Manual Alarm Management */}
+        {/* AI Suggestions Tool */}
         <section className="space-y-4">
-          <AlarmManager />
+          <SmartReminderTool />
         </section>
 
-        {/* AI Shortcut Card */}
-        <Card className="border-primary/20 bg-primary/5 rounded-[2rem] overflow-hidden border-dashed">
+        {/* Manual Alarm Shortcut Card */}
+        <Card className="border-white/10 bg-white/5 backdrop-blur-md rounded-[2rem] overflow-hidden border-dashed">
           <CardContent className="p-6 flex flex-col gap-4">
             <div className="flex gap-4">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5 text-primary" />
+              <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+                <Bell className="w-5 h-5 text-muted-foreground" />
               </div>
               <div className="space-y-1">
-                <h4 className="font-bold text-white text-sm">Need a smarter schedule?</h4>
+                <h4 className="font-bold text-white text-sm">Prefer manual control?</h4>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Let our AI analyze your sleep and activity patterns to generate the perfect hydration spread for you.
+                  You can always set custom one-off or recurring alarms manually in your reminders hub.
                 </p>
               </div>
             </div>
             <Button 
-              className="w-full bg-primary hover:bg-primary/90 text-background font-bold rounded-xl"
-              onClick={() => router.push('/ai-suggestions')}
+              variant="outline"
+              className="w-full border-white/10 hover:bg-white/5 text-white font-bold rounded-xl"
+              onClick={() => router.push('/reminders')}
             >
-              Go to AI Suggestions
+              Manage Manual Alarms
             </Button>
           </CardContent>
         </Card>
 
-        {/* Help/Info Footer */}
+        {/* AI Explanation Footer */}
         <Card className="border-white/5 bg-white/5 backdrop-blur-md rounded-[2rem] overflow-hidden">
           <CardContent className="p-6 flex gap-4">
             <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
               <Info className="w-5 h-5 text-muted-foreground" />
             </div>
             <div className="space-y-1">
-              <h4 className="font-bold text-white text-sm">Persistent Reminders</h4>
+              <h4 className="font-bold text-white text-sm">How AI Scheduling Works</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Manual alarms repeat every day at the specified time. You can clear them individually or overwrite them using the AI engine.
+                Our model considers your wake/sleep cycle to prevent disruptive alerts. It spreads your goal volume across 6-8 reminders, specifically avoiding times you marked as "Busy" in your activity description.
               </p>
             </div>
           </CardContent>
