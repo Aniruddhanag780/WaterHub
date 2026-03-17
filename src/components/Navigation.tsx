@@ -1,6 +1,7 @@
 
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Droplet, History, Settings, Home, Sparkles, UserCircle, Bell } from "lucide-react"
@@ -10,9 +11,21 @@ import { useUser } from "@/firebase"
 export function Navigation() {
   const pathname = usePathname()
   const { user } = useUser()
+  const [mounted, setMounted] = useState(false)
+
+  // Avoid hydration mismatch by waiting for mount
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Don't show navigation on the login page
   if (pathname === "/login") return null
+  
+  // Render a minimal placeholder or nothing during the first server pass to prevent hydration errors
+  // with dynamic path-based active states
+  if (!mounted) return (
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 h-20 md:relative md:border-t-0 md:bg-transparent md:h-24" />
+  )
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
@@ -24,17 +37,17 @@ export function Navigation() {
   ]
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 flex items-center h-20 px-2 md:relative md:border-t-0 md:bg-transparent md:h-24 md:px-0 md:justify-center md:gap-8">
-      {/* Desktop Logo - Now part of the flex sequence for equal spacing */}
+    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-t border-white/10 flex items-center h-20 px-2 md:relative md:border-t-0 md:bg-transparent md:h-24 md:px-0 md:justify-center md:gap-12">
+      {/* Desktop Logo */}
       <div className="hidden md:flex items-center gap-2 text-primary group cursor-pointer transition-all hover:opacity-80">
         <div className="p-2.5 bg-primary/10 rounded-2xl transition-all group-hover:scale-110 group-hover:bg-primary/20">
           <Droplet className="w-6 h-6 fill-current" />
         </div>
-        <span className="text-2xl font-black tracking-tight text-white uppercase italic ml-[-2px]">WaterHub</span>
+        <span className="text-2xl font-black tracking-tight text-white uppercase italic ml-[-4px]">WaterHub</span>
       </div>
       
-      {/* Navigation Links - Distributed with consistent gaps on desktop */}
-      <div className="flex w-full justify-evenly items-center md:w-auto md:gap-4 lg:gap-8">
+      {/* Navigation Links - Balanced spacing matching the logo gap */}
+      <div className="flex w-full justify-evenly items-center md:w-auto md:gap-6 lg:gap-10">
         {navItems.map((item) => {
           const isActive = pathname === item.href
           return (
