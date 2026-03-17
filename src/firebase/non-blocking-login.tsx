@@ -1,4 +1,3 @@
-
 'use client';
 import {
   Auth,
@@ -9,12 +8,12 @@ import {
   GoogleAuthProvider,
   OAuthProvider,
   sendPasswordResetEmail,
-  linkWithPopup,
+  sendEmailVerification,
+  User,
 } from 'firebase/auth';
 
 /** 
  * Initiate anonymous sign-in. 
- * Returns the promise so the caller can catch specific configuration errors.
  */
 export function initiateAnonymousSignIn(authInstance: Auth) {
   return signInAnonymously(authInstance);
@@ -22,15 +21,20 @@ export function initiateAnonymousSignIn(authInstance: Auth) {
 
 /** 
  * Initiate email/password sign-up. 
- * Returns the promise so the caller can catch specific configuration errors.
  */
 export function initiateEmailSignUp(authInstance: Auth, email: string, password: string) {
   return createUserWithEmailAndPassword(authInstance, email, password);
 }
 
+/**
+ * Sends a verification email to the current user.
+ */
+export function initiateEmailVerification(user: User) {
+  return sendEmailVerification(user);
+}
+
 /** 
  * Initiate email/password sign-in. 
- * Returns the promise so the caller can catch specific configuration errors.
  */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string) {
   return signInWithEmailAndPassword(authInstance, email, password);
@@ -61,8 +65,6 @@ export function initiateMicrosoftSignIn(authInstance: Auth) {
 
 /** 
  * Connects the current application session to Google Drive by requesting the drive.file scope.
- * This is treated as a service connection for background history backups.
- * Returns a promise that resolves with the access token.
  */
 export async function connectGoogleDrive(authInstance: Auth): Promise<string | null> {
   const provider = new GoogleAuthProvider();
@@ -73,8 +75,6 @@ export async function connectGoogleDrive(authInstance: Auth): Promise<string | n
   }
 
   try {
-    // We use signInWithPopup to ensure we get a fresh token with the requested scope.
-    // This connects the Drive service to the current session.
     const result = await signInWithPopup(authInstance, provider);
     const credential = GoogleAuthProvider.credentialFromResult(result);
     return credential?.accessToken || null;

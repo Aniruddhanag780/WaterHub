@@ -8,17 +8,19 @@ import {
   initiateAnonymousSignIn,
   initiateGoogleSignIn,
   initiateMicrosoftSignIn,
-  initiatePasswordReset
+  initiatePasswordReset,
+  initiateEmailVerification
 } from "@/firebase/non-blocking-login"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, AlertTriangle } from "lucide-react"
+import { Loader2, User, AlertTriangle, MailCheck, ArrowLeft, ShieldCheck } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import { useHydration } from "@/lib/store"
+import { signOut } from "firebase/auth"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -42,12 +44,14 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [socialLoading, setSocialLoading] = useState<string | null>(null)
+  const [verificationSent, setVerificationSent] = useState(false)
   
   const [showWarning, setShowWarning] = useState(false)
   const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
 
   useEffect(() => {
-    if (!isUserLoading && user) {
+    // If user is already logged in AND verified, redirect home
+    if (!isUserLoading && user && user.emailVerified) {
       router.push("/")
     }
   }, [user, isUserLoading, router])
@@ -56,8 +60,13 @@ export default function LoginPage() {
     setLoading(true)
     try {
       if (pendingAction === "signup") {
-        await initiateEmailSignUp(auth, email, password)
-        addNotification('login', 'New Account Created', 'completed')
+        const userCredential = await initiateEmailSignUp(auth, email, password)
+        // Send verification email
+        await initiateEmailVerification(userCredential.user)
+        // Sign out immediately so they can't access the app until verified
+        await signOut(auth)
+        setVerificationSent(true)
+        addNotification('login', 'New Account Created (Pending Verification)', 'completed')
       } else if (pendingAction === "guest") {
         await initiateAnonymousSignIn(auth)
         addNotification('login', 'Guest Session Started', 'completed')
@@ -84,7 +93,20 @@ export default function LoginPage() {
     } else {
       setLoading(true)
       try {
-        await initiateEmailSignIn(auth, email, password)
+        const userCredential = await initiateEmailSignIn(auth, email, password)
+        
+        // If email is not verified, block access
+        if (!userCredential.user.emailVerified) {
+          await signOut(auth)
+          toast({
+            variant: "destructive",
+            title: "Email Not Verified",
+            description: "Please check your inbox and verify your email before logging in.",
+          })
+          setLoading(false)
+          return
+        }
+
         addNotification('login', 'Email Login', 'completed')
       } catch (err: any) {
         toast({
@@ -177,7 +199,39 @@ export default function LoginPage() {
     )
   }
 
-  if (user) return null
+  // Verification Screen
+  if (verificationSent) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[90vh] px-4 py-10 bg-[#09090b]">
+        <div className="w-full max-w-[400px] bg-white rounded-[2rem] p-8 shadow-2xl text-black border border-black/10 text-center space-y-6">
+          <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
+            <MailCheck className="w-10 h-10 text-emerald-500" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-2xl font-bold tracking-tight">Check your email!</h1>
+            <p className="text-muted-foreground text-sm font-medium">
+              We've sent a verification link to <span className="text-black font-bold">{email}</span>. 
+              Please verify your account before logging in.
+            </p>
+          </div>
+          <div className="pt-4">
+            <Button 
+              className="w-full h-12 rounded-xl bg-black text-white font-bold flex items-center justify-center gap-2 transition-all active:scale-95"
+              onClick={() => {
+                setVerificationSent(false)
+                setIsSignUp(false)
+              }}
+            >
+              <ArrowLeft className="w-4 h-4" /> Back to Login
+            </Button>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Didn't get an email? Check your spam folder or try signing up again.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[90vh] px-4 py-10 bg-[#09090b]">
@@ -191,6 +245,11 @@ export default function LoginPage() {
               ? "Join WaterHub to start your intelligent hydration journey." 
               : "Please enter your email below to sign in to your account."}
           </p>
+          {isSignUp && (
+            <div className="mt-2 bg-blue-50 text-blue-600 py-1.5 px-3 rounded-lg flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-wider mx-4">
+              <ShieldCheck className="w-3.5 h-3.5" /> Email Verification Required
+            </div>
+          )}
         </div>
 
         <form onSubmit={handleAuthAttempt} className="space-y-4">
