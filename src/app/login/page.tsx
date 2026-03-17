@@ -50,7 +50,7 @@ export default function LoginPage() {
   const [showWarning, setShowWarning] = useState(false)
   const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
 
-  // Use the provided site key from environment variables
+  // Use the provided site key
   const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
 
   useEffect(() => {
@@ -346,7 +346,7 @@ export default function LoginPage() {
             onClick={handleMicrosoftSignIn} 
             disabled={loading || !captchaToken}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+            {loading ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : (
               <>
                 <svg className="w-4 h-4" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
                   <path fill="#f35325" d="M1 1h10v10H1z"/>
@@ -365,7 +365,7 @@ export default function LoginPage() {
             onClick={handleGuestAttempt}
             disabled={loading || !captchaToken}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+            {loading ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : (
               <>
                 <User className="w-4 h-4" />
                 Guest
@@ -389,6 +389,12 @@ export default function LoginPage() {
             </Button>
           </div>
         </div>
+      </div>
+
+      {/* Floating reCAPTCHA Icon Badge */}
+      <div className="fixed bottom-4 right-4 z-50 pointer-events-none opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
+        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+        <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">Protected by reCAPTCHA</span>
       </div>
 
       {/* Data Retention Warning Dialog */}
