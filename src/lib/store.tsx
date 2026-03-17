@@ -1,8 +1,9 @@
+
 "use client"
 
 import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from "react"
 import { useUser, useFirestore, useCollection, useDoc, useMemoFirebase } from "@/firebase"
-import { collection, doc, query, orderBy } from "firebase/firestore"
+import { collection, doc, query, orderBy, limit } from "firebase/firestore"
 import { addDocumentNonBlocking, deleteDocumentNonBlocking, setDocumentNonBlocking } from "@/firebase/non-blocking-updates"
 import { GoogleDriveService } from "@/lib/google-drive"
 import { useToast } from "@/hooks/use-toast"
@@ -17,7 +18,7 @@ export type WaterLog = {
 
 export type AppNotification = {
   id: string
-  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder'
+  type: 'login' | 'logout' | 'drive_connected' | 'drive_disconnected' | 'drive_sync' | 'goal_updated' | 'hydration_reminder' | 'water_added' | 'water_removed' | 'reminders_updated'
   title: string
   status: 'completed' | 'failed'
   timestamp: string
@@ -97,7 +98,8 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
     if (!db || !user) return null
     return query(
       collection(db, "users", user.uid, "notifications"),
-      orderBy("timestamp", "desc")
+      orderBy("timestamp", "desc"),
+      limit(20)
     )
   }, [db, user])
 
@@ -145,8 +147,8 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         status,
         timestamp,
       }
-      setLocalNotifications(prev => [newNotif, ...prev])
-      localStorage.setItem("hydrotrack_notifications", JSON.stringify([newNotif, ...notifications]))
+      setLocalNotifications(prev => [newNotif, ...prev].slice(0, 50))
+      localStorage.setItem("hydrotrack_notifications", JSON.stringify([newNotif, ...notifications].slice(0, 50)))
     }
   }, [user, db, notifications])
 
@@ -180,11 +182,13 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         isEnabled: true,
         updatedAt: new Date().toISOString(),
       }, { merge: true })
+      addNotification('reminders_updated', 'Hydration schedule updated', 'completed')
     } else {
       setLocalReminders(sortedTimes)
       localStorage.setItem("hydrotrack_reminders", JSON.stringify(sortedTimes))
+      addNotification('reminders_updated', 'Local schedule updated', 'completed')
     }
-  }, [user, db, reminderRef])
+  }, [user, db, reminderRef, addNotification])
 
   const stopAlarm = useCallback(() => {
     setIsRinging(false)
@@ -408,6 +412,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         createdAt: new Date().toISOString()
       })
       updateDailySummary(dateStr, amount)
+      addNotification('water_added', `Logged ${amount}ml water`, 'completed')
     } else {
       const newLog: WaterLog = {
         id: Math.random().toString(36).substring(7),
@@ -416,6 +421,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       }
       setLocalLogs((prev) => [...prev, newLog])
       localStorage.setItem("hydrotrack_logs", JSON.stringify([...localLogs, newLog]))
+      addNotification('water_added', `Logged ${amount}ml water (local)`, 'completed')
     }
   }
 
@@ -430,10 +436,12 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       const docRef = doc(db, "users", user.uid, "waterIntakes", id)
       deleteDocumentNonBlocking(docRef)
       updateDailySummary(dateStr, -amount)
+      addNotification('water_removed', `Removed ${amount}ml log`, 'completed')
     } else {
       const remaining = localLogs.filter((log) => log.id !== id)
       setLocalLogs(remaining)
       localStorage.setItem("hydrotrack_logs", JSON.stringify(remaining))
+      addNotification('water_removed', `Removed ${amount}ml log (local)`, 'completed')
     }
   }
 
@@ -444,10 +452,11 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         userId: user.uid,
         updatedAt: new Date().toISOString(),
       }, { merge: true })
-      addNotification('goal_updated', `Goal set to ${amount}ml`, 'completed')
+      addNotification('goal_updated', `Goal updated to ${amount}ml`, 'completed')
     } else {
       setLocalGoal(amount)
       localStorage.setItem("hydrotrack_goal", amount.toString())
+      addNotification('goal_updated', `Local goal set to ${amount}ml`, 'completed')
     }
   }
 
@@ -458,9 +467,11 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         userId: user.uid,
         updatedAt: new Date().toISOString(),
       }, { merge: true })
+      addNotification(linked ? 'drive_connected' : 'drive_disconnected', linked ? 'Google Drive Linked' : 'Google Drive Unlinked', 'completed')
     } else {
       setLocalDriveLinked(linked)
       localStorage.setItem("hydrotrack_drive_linked", linked.toString())
+      addNotification(linked ? 'drive_connected' : 'drive_connected (local)', linked ? 'Cloud service connected' : 'Cloud service disconnected', 'completed')
     }
   }
 

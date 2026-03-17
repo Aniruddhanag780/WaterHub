@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect } from "react"
@@ -7,7 +8,7 @@ import { WaterProgress } from "@/components/WaterProgress"
 import { WaterLogger } from "@/components/WaterLogger"
 import { Card, CardContent } from "@/components/ui/card"
 import { useHydration } from "@/lib/store"
-import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert, Cloud } from "lucide-react"
+import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert, Cloud, Trash2 } from "lucide-react"
 import {
   Popover,
   PopoverContent,
@@ -56,6 +57,15 @@ export default function Home() {
       case 'drive_connected':
       case 'drive_disconnected':
         return <Cloud className="w-4 h-4" />
+      case 'water_added':
+        return <Droplet className="w-4 h-4" />
+      case 'water_removed':
+        return <Trash2 className="w-4 h-4" />
+      case 'goal_updated':
+        return <Trophy className="w-4 h-4" />
+      case 'reminders_updated':
+      case 'hydration_reminder':
+        return <Bell className="w-4 h-4" />
       default:
         return <CheckCircle2 className="w-4 h-4" />
     }
@@ -109,7 +119,7 @@ export default function Home() {
             <PopoverContent className="w-80 p-0 rounded-3xl border-white/10 bg-card/95 backdrop-blur-xl shadow-2xl mr-4" align="end">
               <div className="p-4 border-b border-white/5">
                 <h3 className="font-bold text-lg text-white">Activity Feed</h3>
-                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">System & Cloud Status</p>
+                <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Everything you perform</p>
               </div>
               <ScrollArea className="max-h-[350px]">
                 <div className="p-2 space-y-1">
@@ -118,13 +128,13 @@ export default function Home() {
                       <div className="w-12 h-12 rounded-full bg-white/5 mx-auto flex items-center justify-center">
                         <Bell className="w-6 h-6 text-muted-foreground/30" />
                       </div>
-                      <p className="text-sm text-muted-foreground italic">No system activity logged today.</p>
+                      <p className="text-sm text-muted-foreground italic">No activity logged today yet.</p>
                     </div>
                   ) : (
                     todayNotifications.map((notif) => (
                       <div key={notif.id} className="p-3 rounded-2xl hover:bg-white/5 flex gap-3 group transition-colors">
                         <div className={cn(
-                          "shrink-0 p-1.5 rounded-lg",
+                          "shrink-0 p-1.5 rounded-lg flex items-center justify-center",
                           notif.status === 'completed' ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
                         )}>
                           {getIconForType(notif.type)}
@@ -146,7 +156,7 @@ export default function Home() {
               </ScrollArea>
               <div className="p-3 border-t border-white/5">
                 <p className="text-[9px] text-center text-muted-foreground font-medium italic">
-                  Water logs are excluded from this activity feed.
+                  Showing your real-time actions and system updates.
                 </p>
               </div>
             </PopoverContent>

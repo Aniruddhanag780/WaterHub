@@ -88,7 +88,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "AppNotification",
       "type": "object",
-      "description": "Records non-water related system events and user actions for notification tracking.",
+      "description": "Records all system events and user actions for notification tracking.",
       "properties": {
         "id": {
           "type": "string"
@@ -98,7 +98,7 @@
         },
         "type": {
           "type": "string",
-          "enum": ["login", "logout", "drive_connected", "goal_updated"]
+          "enum": ["login", "logout", "drive_connected", "drive_disconnected", "drive_sync", "goal_updated", "hydration_reminder", "water_added", "water_removed", "reminders_updated"]
         },
         "title": {
           "type": "string"
@@ -142,7 +142,7 @@
             "$ref": "#/backend/entities/UserProfile"
           },
           "description": "Stores user settings and preferences."
-        }
+"        }
       },
       {
         "path": "/users/{userId}/notifications/{notificationId}",
