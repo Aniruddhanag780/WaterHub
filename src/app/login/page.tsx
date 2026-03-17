@@ -44,6 +44,7 @@ function LoginForm() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
+  const [socialLoading, setSocialLoading] = useState<string | null>(null)
   
   const [showWarning, setShowWarning] = useState(false)
   const [pendingAction, setPendingAction] = useState<"guest" | "signup" | null>(null)
@@ -66,10 +67,13 @@ function LoginForm() {
 
     setLoading(true)
     try {
+      // reCAPTCHA v3 score-based verification (invisible)
       const token = await executeRecaptcha(actionName)
       if (!token) {
         throw new Error("Failed to acquire security token.")
       }
+      // Note: In a production app, you would send this 'token' to your backend 
+      // to verify the score using your SECRET_KEY.
       await callback()
     } catch (err: any) {
       toast({
@@ -79,6 +83,7 @@ function LoginForm() {
       })
     } finally {
       setLoading(false)
+      setSocialLoading(null)
     }
   }
 
@@ -154,6 +159,7 @@ function LoginForm() {
   }
 
   const handleGoogleSignIn = async () => {
+    setSocialLoading("google")
     await verifyAndExecute("google_login", async () => {
       try {
         await initiateGoogleSignIn(auth)
@@ -169,6 +175,7 @@ function LoginForm() {
   }
 
   const handleMicrosoftSignIn = async () => {
+    setSocialLoading("microsoft")
     await verifyAndExecute("microsoft_login", async () => {
       try {
         await initiateMicrosoftSignIn(auth)
@@ -251,7 +258,7 @@ function LoginForm() {
             className="w-full h-12 rounded-xl bg-[#18181b] hover:bg-[#18181b]/90 text-white font-semibold text-base transition-all active:scale-[0.98] mt-2 disabled:opacity-50"
             disabled={loading}
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : (isSignUp ? "Sign Up" : "Sign in")}
+            {loading && !socialLoading ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : (isSignUp ? "Sign Up" : "Sign in")}
           </Button>
         </form>
 
@@ -271,7 +278,7 @@ function LoginForm() {
             onClick={handleGoogleSignIn} 
             disabled={loading}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : (
+            {socialLoading === "google" ? <Loader2 className="w-4 h-4 animate-spin" /> : (
               <>
                 <svg className="w-4 h-4" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -290,7 +297,7 @@ function LoginForm() {
             onClick={handleMicrosoftSignIn} 
             disabled={loading}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : (
+            {socialLoading === "microsoft" ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : (
               <>
                 <svg className="w-4 h-4" viewBox="0 0 23 23" xmlns="http://www.w3.org/2000/svg">
                   <path fill="#f35325" d="M1 1h10v10H1z"/>
@@ -309,7 +316,7 @@ function LoginForm() {
             onClick={handleGuestAttempt}
             disabled={loading}
           >
-            {loading ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : (
+            {socialLoading === "guest" ? <Loader2 className="w-4 h-4 animate-spin text-black" /> : (
               <>
                 <User className="w-4 h-4" />
                 Guest
@@ -335,7 +342,7 @@ function LoginForm() {
         </div>
       </div>
 
-      {/* Floating reCAPTCHA Icon Badge */}
+      {/* Visual Indicator of Background Security */}
       <div className="fixed bottom-4 right-4 z-50 pointer-events-none opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
         <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
         <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">Score-based Security Active</span>
@@ -380,7 +387,7 @@ export default function LoginPage() {
   const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
 
   return (
-    <GoogleReCaptchaProvider reCaptchaKey={SITE_KEY}>
+    <GoogleReCaptchaProvider reCaptchaKey={SITE_KEY} container={{ parameters: { badge: 'bottomright' } }}>
       <LoginForm />
     </GoogleReCaptchaProvider>
   )
