@@ -68,16 +68,15 @@ function LoginForm() {
     setLoading(true)
     try {
       // reCAPTCHA v3 score-based verification (invisible)
-      // The badge at the bottom right indicates this is active.
       const token = await executeRecaptcha(actionName)
       if (!token) {
         throw new Error("Failed to acquire security token.")
       }
       
-      // In a production app, you would verify this 'token' server-side.
-      // For this implementation, we proceed if a token is acquired.
+      // Proceed with the actual authentication callback
       await callback()
     } catch (err: any) {
+      // Common errors: 'invalid-site-key', 'invalid-domain'
       toast({
         variant: "destructive",
         title: "Security Error",
@@ -394,7 +393,6 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
-  // Provided specific site key
   const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
 
   return (
