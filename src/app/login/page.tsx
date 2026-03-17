@@ -89,15 +89,23 @@ function LoginForm() {
 
   const executeAuth = async () => {
     await verifyAndExecute(pendingAction === "signup" ? "signup" : "guest_login", async () => {
-      if (pendingAction === "signup") {
-        await initiateEmailSignUp(auth, email, password)
-        addNotification('login', 'New Account Created', 'completed')
-      } else if (pendingAction === "guest") {
-        await initiateAnonymousSignIn(auth)
-        addNotification('login', 'Guest Session Started', 'completed')
+      try {
+        if (pendingAction === "signup") {
+          await initiateEmailSignUp(auth, email, password)
+          addNotification('login', 'New Account Created', 'completed')
+        } else if (pendingAction === "guest") {
+          await initiateAnonymousSignIn(auth)
+          addNotification('login', 'Guest Session Started', 'completed')
+        }
+        setShowWarning(false)
+        setPendingAction(null)
+      } catch (err: any) {
+        toast({
+          variant: "destructive",
+          title: "Auth Error",
+          description: err.message,
+        })
       }
-      setShowWarning(false)
-      setPendingAction(null)
     })
   }
 
@@ -384,6 +392,7 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  // Use the key you provided. Hardcoded as a fallback to ensure reliability during domain testing.
   const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
 
   return (
