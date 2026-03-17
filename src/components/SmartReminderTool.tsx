@@ -18,11 +18,11 @@ export function SmartReminderTool() {
   const [applied, setApplied] = useState(false)
   
   const [schedule, setSchedule] = useState({
-    wakeUpTime: "07:00",
+    wakeUpTime: "",
     wakeUpPeriod: "AM",
-    sleepTime: "10:00",
+    sleepTime: "",
     sleepPeriod: "PM",
-    activity: "Work from 9 to 5, gym in evening around 6 PM."
+    activity: ""
   })
 
   // Estimate average intake for the AI context
@@ -33,9 +33,9 @@ export function SmartReminderTool() {
     setApplied(false)
     try {
       const result = await intelligentHydrationReminders({
-        wakeUpTime: `${schedule.wakeUpTime} ${schedule.wakeUpPeriod}`,
-        sleepTime: `${schedule.sleepTime} ${schedule.sleepPeriod}`,
-        activityPattern: schedule.activity,
+        wakeUpTime: `${schedule.wakeUpTime || "07:00"} ${schedule.wakeUpPeriod}`,
+        sleepTime: `${schedule.sleepTime || "10:00"} ${schedule.sleepPeriod}`,
+        activityPattern: schedule.activity || "Work from 9 to 5, gym in evening around 6 PM.",
         dailyGoalMl: goal,
         averageIntakeMl: averageIntake
       })
@@ -119,7 +119,7 @@ export function SmartReminderTool() {
         <div className="space-y-2">
           <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Typical Daily Activity</Label>
           <Textarea 
-            placeholder="E.g. I work at a desk most day, workout at 6pm..."
+            placeholder="E.g. Work from 9 to 5, gym in evening around 6 PM."
             value={schedule.activity}
             onChange={e => setSchedule(s => ({...s, activity: e.target.value}))}
             className="bg-white border-none shadow-sm min-h-[100px] text-black"
