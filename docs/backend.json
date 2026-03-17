@@ -5,33 +5,27 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user account within the HydroTrack application, linked to an external authentication system. This entity contains core user identification details but not authentication credentials.",
+      "description": "Represents a user account within the HydroTrack application.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the User entity."
+          "type": "string"
         },
         "externalAuthId": {
-          "type": "string",
-          "description": "Identifier provided by the external authentication system, linking this internal User record to their authenticated identity. (Relationship: ExternalAuth 1:1 User)"
+          "type": "string"
         },
         "email": {
           "type": "string",
-          "description": "The user's primary email address, used for communication and identification purposes.",
           "format": "email"
         },
         "displayName": {
-          "type": "string",
-          "description": "The user's preferred name to be displayed within the application."
+          "type": "string"
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp indicating when the user account was first created.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "Timestamp indicating the last time the user account details were updated.",
           "format": "date-time"
         }
       },
@@ -47,42 +41,37 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "UserProfile",
       "type": "object",
-      "description": "Stores personalized settings and preferences for a user, including their daily hydration goal, preferred measurement unit, and typical daily activity times.",
+      "description": "Stores personalized settings and preferences for a user.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the UserProfile entity."
+          "type": "string"
         },
         "userId": {
-          "type": "string",
-          "description": "Reference to the User entity this profile belongs to. (Relationship: User 1:1 UserProfile)"
+          "type": "string"
         },
         "dailyGoalMl": {
-          "type": "number",
-          "description": "The user's personalized daily water intake target, measured in milliliters."
+          "type": "number"
+        },
+        "isDriveLinked": {
+          "type": "boolean"
         },
         "preferredUnit": {
-          "type": "string",
-          "description": "The user's preferred unit of measurement for displaying water intake (e.g., 'ml', 'oz')."
+          "type": "string"
         },
         "wakeUpTime": {
           "type": "string",
-          "description": "The typical time of day the user wakes up (HH:MM), used by the Smart Reminder Tool.",
           "format": "time"
         },
         "sleepTime": {
           "type": "string",
-          "description": "The typical time of day the user goes to sleep (HH:MM), used by the Smart Reminder Tool to define silent hours.",
           "format": "time"
         },
         "createdAt": {
           "type": "string",
-          "description": "Timestamp indicating when the user profile was first created.",
           "format": "date-time"
         },
         "updatedAt": {
           "type": "string",
-          "description": "Timestamp indicating the last time the user profile settings were updated.",
           "format": "date-time"
         }
       },
@@ -90,182 +79,40 @@
         "id",
         "userId",
         "dailyGoalMl",
-        "preferredUnit",
-        "wakeUpTime",
-        "sleepTime",
+        "isDriveLinked",
         "createdAt",
         "updatedAt"
       ]
     },
-    "WaterIntake": {
+    "AppNotification": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "WaterIntake",
+      "title": "AppNotification",
       "type": "object",
-      "description": "Records each individual instance of water intake logged by a user, including the amount and time.",
+      "description": "Records non-water related system events and user actions for notification tracking.",
       "properties": {
         "id": {
-          "type": "string",
-          "description": "Unique identifier for the WaterIntake record."
+          "type": "string"
         },
         "userId": {
-          "type": "string",
-          "description": "Reference to the User entity who logged this water intake. (Relationship: User 1:N WaterIntake)"
+          "type": "string"
         },
-        "amountMl": {
-          "type": "number",
-          "description": "The amount of water consumed in milliliters."
+        "type": {
+          "type": "string",
+          "enum": ["login", "logout", "drive_connected", "goal_updated"]
+        },
+        "title": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "failed"]
         },
         "timestamp": {
           "type": "string",
-          "description": "The exact date and time when the water intake was recorded.",
-          "format": "date-time"
-        },
-        "source": {
-          "type": "string",
-          "description": "Indicates the method used to log the intake (e.g., 'predefined_cup', 'custom_amount')."
-        },
-        "cupSizeMl": {
-          "type": "number",
-          "description": "The size of the predefined cup used for logging, in milliliters. This property is present if the 'source' indicates a predefined cup."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the water intake record was created.",
           "format": "date-time"
         }
       },
-      "required": [
-        "id",
-        "userId",
-        "amountMl",
-        "timestamp",
-        "source",
-        "createdAt"
-      ]
-    },
-    "ReminderSetting": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "ReminderSetting",
-      "type": "object",
-      "description": "Stores a user's customizable preferences for drinking reminders, including frequency, silent hours, and smart reminder options.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the ReminderSetting entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User entity these reminder settings belong to. (Relationship: User 1:1 ReminderSetting)"
-        },
-        "isEnabled": {
-          "type": "boolean",
-          "description": "Boolean indicating whether drinking reminders are currently active for the user."
-        },
-        "frequencyMinutes": {
-          "type": "number",
-          "description": "The interval in minutes between reminder notifications when enabled."
-        },
-        "silentHoursStart": {
-          "type": "string",
-          "description": "The start time for silent hours (HH:MM) during which no reminders should be sent.",
-          "format": "time"
-        },
-        "silentHoursEnd": {
-          "type": "string",
-          "description": "The end time for silent hours (HH:MM).",
-          "format": "time"
-        },
-        "reminderMessage": {
-          "type": "string",
-          "description": "A customizable message to be included in the reminder notifications."
-        },
-        "smartRemindersEnabled": {
-          "type": "boolean",
-          "description": "Boolean indicating whether the AI-powered smart reminder tool is active, optimizing notification timings."
-        },
-        "optimalReminderTimes": {
-          "type": "array",
-          "description": "An array of specific times (HH:MM) identified by the smart reminder tool as optimal for sending reminders, if enabled.",
-          "items": {
-            "type": "string"
-          }
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when the reminder settings were first created.",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating the last time the reminder settings were updated.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "isEnabled",
-        "frequencyMinutes",
-        "silentHoursStart",
-        "silentHoursEnd",
-        "reminderMessage",
-        "smartRemindersEnabled",
-        "createdAt",
-        "updatedAt"
-      ]
-    },
-    "DailySummary": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "DailySummary",
-      "type": "object",
-      "description": "Aggregates a user's water intake and goal achievement for a specific date, used for historical views and real-time progress visualization.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the DailySummary entity."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User entity for whom this daily summary is recorded. (Relationship: User 1:N DailySummary)"
-        },
-        "date": {
-          "type": "string",
-          "description": "The specific date (YYYY-MM-DD) for which this summary is generated.",
-          "format": "date"
-        },
-        "totalIntakeMl": {
-          "type": "number",
-          "description": "The total amount of water consumed by the user on this date, in milliliters."
-        },
-        "dailyGoalMl": {
-          "type": "number",
-          "description": "The user's daily hydration goal in milliliters as it was set for this particular date."
-        },
-        "goalAchieved": {
-          "type": "boolean",
-          "description": "Indicates whether the user met or exceeded their daily hydration goal on this date."
-        },
-        "createdAt": {
-          "type": "string",
-          "description": "Timestamp indicating when this daily summary record was first created (e.g., with the first intake of the day).",
-          "format": "date-time"
-        },
-        "updatedAt": {
-          "type": "string",
-          "description": "Timestamp indicating when this daily summary record was last updated (e.g., with the last intake of the day).",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "date",
-        "totalIntakeMl",
-        "dailyGoalMl",
-        "goalAchieved",
-        "createdAt",
-        "updatedAt"
-      ]
+      "required": ["id", "userId", "type", "title", "status", "timestamp"]
     }
   },
   "auth": {
@@ -284,88 +131,29 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores core user account information. Each document's ID is the `externalAuthId` (Firebase `request.auth.uid`) of the authenticated user. This collection serves as the root for all user-specific data.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user, corresponding to `request.auth.uid` from Firebase Authentication."
-            }
-          ]
+          "description": "Stores core user account information."
         }
       },
       {
-        "path": "/users/{userId}/profile",
+        "path": "/users/{userId}/profile/profile",
         "definition": {
           "entityName": "UserProfile",
           "schema": {
             "$ref": "#/backend/entities/UserProfile"
           },
-          "description": "Stores personalized settings and preferences for a user, such as daily hydration goal and preferred units. This is a 1:1 sub-document with a fixed ID 'profile', implicitly owned by the parent user. Access is determined by the parent `userId` in the path.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user, corresponding to `request.auth.uid`."
-            }
-          ]
+          "description": "Stores user settings and preferences."
         }
       },
       {
-        "path": "/users/{userId}/waterIntakes/{waterIntakeId}",
+        "path": "/users/{userId}/notifications/{notificationId}",
         "definition": {
-          "entityName": "WaterIntake",
+          "entityName": "AppNotification",
           "schema": {
-            "$ref": "#/backend/entities/WaterIntake"
+            "$ref": "#/backend/entities/AppNotification"
           },
-          "description": "Records individual instances of water intake logged by a user. Each document includes a denormalized 'userId' field for authorization independence, allowing direct comparison with `request.auth.uid`.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user who logged this water intake."
-            },
-            {
-              "name": "waterIntakeId",
-              "description": "The unique ID for a specific water intake record."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/reminderSetting",
-        "definition": {
-          "entityName": "ReminderSetting",
-          "schema": {
-            "$ref": "#/backend/entities/ReminderSetting"
-          },
-          "description": "Stores a user's customizable preferences for drinking reminders. This is a 1:1 sub-document with a fixed ID 'reminderSetting', implicitly owned by the parent user. Access is determined by the parent `userId` in the path.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user for whom these reminder settings apply."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/dailySummaries/{dailySummaryId}",
-        "definition": {
-          "entityName": "DailySummary",
-          "schema": {
-            "$ref": "#/backend/entities/DailySummary"
-          },
-          "description": "Aggregates a user's water intake and goal achievement for a specific date. Each document includes a denormalized 'userId' field for authorization independence, allowing direct comparison with `request.auth.uid`. The `dailySummaryId` can be structured as 'YYYY-MM-DD' for easy date-based retrieval.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user for whom this daily summary is recorded."
-            },
-            {
-              "name": "dailySummaryId",
-              "description": "The unique ID for a specific daily summary record, ideally formatted as 'YYYY-MM-DD'."
-            }
-          ]
+          "description": "Stores system and account activity notifications."
         }
       }
-    ],
-    "reasoning": "The proposed Firestore structure prioritizes robust security, scalability, and debuggability by strictly adhering to the core design principles. All user-specific data, including `UserProfile`, `WaterIntake`, `ReminderSetting`, and `DailySummary`, is organized under a hierarchical path `/users/{userId}/...`. This design ensures that all documents belonging to a particular user are directly associated with their authenticated ID (`request.auth.uid`).\n\nAuthorization Independence is achieved primarily through structural design and denormalization. For collections like `waterIntakes` and `dailySummaries`, each document explicitly includes a `userId` field that matches the `{userId}` wildcard in its path. This means that Firestore security rules can evaluate access requests by directly comparing `request.auth.uid` with `resource.data.userId` (for writes) or the path segment (`userId`) without needing to perform expensive and dependency-creating `get()` operations on parent documents. This makes rules atomic, highly performant, and simple to debug.\n\nFor 1:1 relationships, such as `UserProfile` and `ReminderSetting`, a single document (`/users/{userId}/profile` and `/users/{userId}/reminderSetting` respectively) is used. In these cases, the `userId` is implicitly denormalized into the path itself, eliminating the need for a `userId` field within the document for authorization purposes, and rules can directly check `request.auth.uid == userId`.\n\nQueryability and Authorization (QAPs) are fully supported. By structuring data under `/users/{userId}/...`, any `list` operation on a subcollection like `/users/{userId}/waterIntakes` is naturally scoped to the requesting user. Security rules can then simply verify that `request.auth.uid == userId` in the path, ensuring that users can only query and retrieve their own data. This avoids the anti-pattern of security rules acting as filters on broader, less secure queries. The explicit `userId` field in `WaterIntake` and `DailySummary` documents further reinforces this by allowing an additional check `request.auth.uid == resource.data.userId` for write operations, preventing users from attempting to write data belonging to another user. This structure effectively implements private data access, where each user has their own segregated data silo."
+    ]
   }
 }

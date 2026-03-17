@@ -17,7 +17,7 @@ import { signOut } from "firebase/auth"
 export default function AccountPage() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
-  const { isDriveLinked, setDriveLinked, syncLogsToDrive, isLoading: isHydrationLoading } = useHydration()
+  const { isDriveLinked, setDriveLinked, syncLogsToDrive, isLoading: isHydrationLoading, addNotification } = useHydration()
   const auth = useAuth()
   const { toast } = useToast()
   
@@ -31,7 +31,6 @@ export default function AccountPage() {
     }
   }, [user, isUserLoading, router])
 
-  // Wait for both user auth AND hydration data (Firestore profile)
   if (isUserLoading || isHydrationLoading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -60,6 +59,7 @@ export default function AccountPage() {
         title: "Connection Failed",
         description: err.message,
       })
+      addNotification('drive_connected', 'Google Drive Link Attempt', 'failed')
     } finally {
       setIsConnecting(false)
     }
@@ -96,6 +96,12 @@ export default function AccountPage() {
 
   const handleLogout = async () => {
     try {
+      // Log the logout action before actual sign out
+      addNotification('logout', 'Account Sign Out', 'completed')
+      
+      // Delay slightly to ensure Firestore operation is queued
+      await new Promise(resolve => setTimeout(resolve, 500))
+      
       await signOut(auth)
       router.push("/login")
       toast({
