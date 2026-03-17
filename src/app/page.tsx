@@ -8,7 +8,7 @@ import { WaterProgress } from "@/components/WaterProgress"
 import { WaterLogger } from "@/components/WaterLogger"
 import { Card, CardContent } from "@/components/ui/card"
 import { useHydration } from "@/lib/store"
-import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert, Cloud, Trash2 } from "lucide-react"
+import { Droplet, Trophy, Flame, BellRing, Loader2, Bell, CheckCircle2, XCircle, Clock, Volume2, ShieldAlert, Cloud, Trash2, ShieldCheck } from "lucide-react"
 import {
   Popover,
   PopoverContent,
@@ -21,7 +21,10 @@ import { cn } from "@/lib/utils"
 export default function Home() {
   const { user, isUserLoading } = useUser()
   const router = useRouter()
-  const { todayTotal, goal, streak, reminders, notifications, currentDate, isRinging, stopAlarm } = useHydration()
+  const { 
+    todayTotal, goal, streak, reminders, notifications, currentDate, 
+    isRinging, stopAlarm, notificationPermission, requestNotificationPermission 
+  } = useHydration()
   
   useEffect(() => {
     if (!isUserLoading && !user) {
@@ -96,6 +99,30 @@ export default function Home() {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Notification Permission Banner */}
+      {notificationPermission !== "granted" && (
+        <Card className="bg-primary/10 border-primary/20 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500">
+          <CardContent className="p-4 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/20 rounded-xl flex items-center justify-center text-primary">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="text-white font-bold text-sm">Enable Background Alerts</h4>
+                <p className="text-[10px] text-muted-foreground font-medium">Get notified even when the app is closed.</p>
+              </div>
+            </div>
+            <Button 
+              size="sm" 
+              onClick={requestNotificationPermission}
+              className="bg-primary text-background font-bold rounded-lg h-9 px-4 hover:bg-primary/90"
+            >
+              Enable
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       <div className="flex items-start justify-between">

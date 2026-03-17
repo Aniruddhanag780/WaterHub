@@ -59,6 +59,8 @@ type HydrationContextType = {
   currentDate: string
   isRinging: boolean
   stopAlarm: () => void
+  notificationPermission: NotificationPermission
+  requestNotificationPermission: () => Promise<void>
 }
 
 const HydrationContext = createContext<HydrationContextType | undefined>(undefined)
@@ -79,6 +81,7 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const [currentDate, setCurrentDate] = useState<string>("")
   const [accessToken, setAccessToken] = useState<string | null>(null)
   const [isRinging, setIsRinging] = useState(false)
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>("default")
   
   const lastTriggeredTimeRef = useRef<string | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
@@ -127,6 +130,19 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
   const reminders = user ? (firestoreReminders?.optimalReminderTimes || localReminders) : localReminders
   const isDriveLinked = user ? (firestoreProfile?.isDriveLinked || false) : localDriveLinked
   const isAutoSyncEnabled = user ? (firestoreProfile?.isAutoSyncEnabled || false) : localAutoSyncEnabled
+
+  const requestNotificationPermission = async () => {
+    if ("Notification" in window) {
+      const permission = await Notification.requestPermission()
+      setNotificationPermission(permission)
+      if (permission === "granted") {
+        toast({
+          title: "Notifications Enabled",
+          description: "WaterHub will now alert you even when the app is in the background.",
+        })
+      }
+    }
+  }
 
   const addNotification = useCallback((type: AppNotification['type'], title: string, status: AppNotification['status']) => {
     const timestamp = new Date().toISOString()
@@ -208,7 +224,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         }
         
         const ctx = audioContextRef.current
-        // If context is suspended (common browser behavior), resume it
         if (ctx.state === 'suspended') {
           ctx.resume()
         }
@@ -216,15 +231,12 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         const osc = ctx.createOscillator()
         const gain = ctx.createGain()
         
-        // Deep base frequency (150Hz) that increases slightly with intensity
         osc.type = 'sine'
         const baseFreq = 150
         osc.frequency.setValueAtTime(baseFreq + (intensity * 5), ctx.currentTime)
         
-        // Volume increases with intensity
         const volume = Math.min(0.2 + (intensity * 0.08), 0.9)
         
-        // Envelope: Quick attack, slight hold, exponential decay
         gain.gain.setValueAtTime(0, ctx.currentTime)
         gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.1)
         gain.gain.setValueAtTime(volume, ctx.currentTime + 0.3)
@@ -238,8 +250,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         
         intensity++
         
-        // Beep frequency (speed) increases with intensity
-        // Starts at 2.5s intervals, accelerates down to 0.4s
         const nextDelay = Math.max(2500 - (intensity * 150), 400)
         timeoutId = setTimeout(playBeep, nextDelay)
       } catch (err) {
@@ -269,7 +279,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       let triggeredReminderStr = ""
 
       reminders.forEach(r => {
-        // Ensure standard comparison format
         const [rTime, rPeriod] = r.split(' ')
         const [rHour, rMin] = rTime.split(':')
         const paddedR = `${rHour.padStart(2, '0')}:${rMin} ${rPeriod}`
@@ -283,7 +292,6 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
         if (nDate >= rDate) {
           expiredReminders.push(r)
-          // Only ring if it's EXACTLY the time and we haven't triggered for this minute yet
           if (paddedR === paddedNow && lastTriggeredTimeRef.current !== nowTimeStr) {
             triggerFound = true
             triggeredReminderStr = r
@@ -294,15 +302,31 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       if (triggerFound) {
         lastTriggeredTimeRef.current = nowTimeStr
         setIsRinging(true)
+
+        // Show toast
         toast({
           title: "💧 Time to Hydrate!",
           description: `Scheduled reminder at ${triggeredReminderStr}. Let's hit that goal!`,
           duration: 30000,
         })
+
+        // Show System Notification
+        if (notificationPermission === "granted") {
+          const notification = new Notification("WaterHub: Time to Hydrate!", {
+            body: `Don't forget to drink your scheduled water (${triggeredReminderStr}).`,
+            icon: "/favicon.ico",
+            tag: "hydration-reminder",
+            requireInteraction: true
+          })
+          notification.onclick = () => {
+            window.focus()
+            notification.close()
+          }
+        }
+
         addNotification('hydration_reminder', `Hydration Alert: ${triggeredReminderStr}`, 'completed')
       }
 
-      // Automatically clean up past reminders that didn't trigger (e.g. app was closed)
       if (expiredReminders.length > 0 && !triggerFound) {
         const remaining = reminders.filter(r => !expiredReminders.includes(r))
         if (remaining.length !== reminders.length) {
@@ -311,9 +335,9 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const interval = setInterval(checkAlarms, 10000) // Check every 10 seconds
+    const interval = setInterval(checkAlarms, 10000)
     return () => clearInterval(interval)
-  }, [reminders, toast, addNotification, setReminders, isRinging])
+  }, [reminders, toast, addNotification, setReminders, isRinging, notificationPermission])
 
   // Midnight Refresh Logic
   useEffect(() => {
@@ -343,6 +367,10 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
 
   // Local Storage Hydration
   useEffect(() => {
+    if ("Notification" in window) {
+      setNotificationPermission(Notification.permission)
+    }
+
     const savedLogs = localStorage.getItem("hydrotrack_logs")
     const savedGoal = localStorage.getItem("hydrotrack_goal")
     const savedReminders = localStorage.getItem("hydrotrack_reminders")
@@ -585,7 +613,9 @@ export function HydrationProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         currentDate,
         isRinging,
-        stopAlarm
+        stopAlarm,
+        notificationPermission,
+        requestNotificationPermission
       }}
     >
       {children}
