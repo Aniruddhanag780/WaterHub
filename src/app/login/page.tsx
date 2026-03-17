@@ -14,13 +14,12 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Loader2, User, AlertTriangle, ShieldCheck } from "lucide-react"
+import { Loader2, User, AlertTriangle } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useUser } from "@/firebase"
 import { useToast } from "@/hooks/use-toast"
 import Link from "next/link"
 import { useHydration } from "@/lib/store"
-import { GoogleReCaptchaProvider, useGoogleReCaptcha } from "react-google-recaptcha-v3"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -32,13 +31,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-function LoginForm() {
+export default function LoginPage() {
   const auth = useAuth()
   const { user, isUserLoading } = useUser()
   const router = useRouter()
   const { toast } = useToast()
   const { addNotification } = useHydration()
-  const { executeRecaptcha } = useGoogleReCaptcha()
   
   const [isSignUp, setIsSignUp] = useState(false)
   const [email, setEmail] = useState("")
@@ -55,59 +53,27 @@ function LoginForm() {
     }
   }, [user, isUserLoading, router])
 
-  const verifyAndExecute = async (actionName: string, callback: () => Promise<void>) => {
-    if (!executeRecaptcha) {
-      toast({
-        variant: "destructive",
-        title: "Security Check Unavailable",
-        description: "reCAPTCHA has not loaded yet. Please try again in a few seconds.",
-      })
-      return
-    }
-
+  const executeAuth = async () => {
     setLoading(true)
     try {
-      // reCAPTCHA v3 score-based verification (invisible)
-      const token = await executeRecaptcha(actionName)
-      if (!token) {
-        throw new Error("Failed to acquire security token.")
+      if (pendingAction === "signup") {
+        await initiateEmailSignUp(auth, email, password)
+        addNotification('login', 'New Account Created', 'completed')
+      } else if (pendingAction === "guest") {
+        await initiateAnonymousSignIn(auth)
+        addNotification('login', 'Guest Session Started', 'completed')
       }
-      
-      // Proceed with the actual authentication callback
-      await callback()
+      setShowWarning(false)
+      setPendingAction(null)
     } catch (err: any) {
-      // Common errors: 'invalid-site-key', 'invalid-domain'
       toast({
         variant: "destructive",
-        title: "Security Error",
-        description: err.message || "Failed domain authorization.",
+        title: "Auth Error",
+        description: err.message,
       })
     } finally {
       setLoading(false)
-      setSocialLoading(null)
     }
-  }
-
-  const executeAuth = async () => {
-    await verifyAndExecute(pendingAction === "signup" ? "signup" : "guest_login", async () => {
-      try {
-        if (pendingAction === "signup") {
-          await initiateEmailSignUp(auth, email, password)
-          addNotification('login', 'New Account Created', 'completed')
-        } else if (pendingAction === "guest") {
-          await initiateAnonymousSignIn(auth)
-          addNotification('login', 'Guest Session Started', 'completed')
-        }
-        setShowWarning(false)
-        setPendingAction(null)
-      } catch (err: any) {
-        toast({
-          variant: "destructive",
-          title: "Auth Error",
-          description: err.message,
-        })
-      }
-    })
   }
 
   const handleAuthAttempt = async (e: React.FormEvent) => {
@@ -117,18 +83,19 @@ function LoginForm() {
       setPendingAction("signup")
       setShowWarning(true)
     } else {
-      await verifyAndExecute("login", async () => {
-        try {
-          await initiateEmailSignIn(auth, email, password)
-          addNotification('login', 'Email Login', 'completed')
-        } catch (err: any) {
-          toast({
-            variant: "destructive",
-            title: "Sign In Error",
-            description: err.message,
-          })
-        }
-      })
+      setLoading(true)
+      try {
+        await initiateEmailSignIn(auth, email, password)
+        addNotification('login', 'Email Login', 'completed')
+      } catch (err: any) {
+        toast({
+          variant: "destructive",
+          title: "Sign In Error",
+          description: err.message,
+        })
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -169,34 +136,34 @@ function LoginForm() {
 
   const handleGoogleSignIn = async () => {
     setSocialLoading("google")
-    await verifyAndExecute("google_login", async () => {
-      try {
-        await initiateGoogleSignIn(auth)
-        addNotification('login', 'Google Login', 'completed')
-      } catch (err: any) {
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: err.message,
-        })
-      }
-    })
+    try {
+      await initiateGoogleSignIn(auth)
+      addNotification('login', 'Google Login', 'completed')
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: err.message,
+      })
+    } finally {
+      setSocialLoading(null)
+    }
   }
 
   const handleMicrosoftSignIn = async () => {
     setSocialLoading("microsoft")
-    await verifyAndExecute("microsoft_login", async () => {
-      try {
-        await initiateMicrosoftSignIn(auth)
-        addNotification('login', 'Microsoft Login', 'completed')
-      } catch (err: any) {
-        toast({
-          variant: "destructive",
-          title: "Authentication Error",
-          description: err.message,
-        })
-      }
-    })
+    try {
+      await initiateMicrosoftSignIn(auth)
+      addNotification('login', 'Microsoft Login', 'completed')
+    } catch (err: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: err.message,
+      })
+    } finally {
+      setSocialLoading(null)
+    }
   }
 
   if (isUserLoading) {
@@ -351,12 +318,6 @@ function LoginForm() {
         </div>
       </div>
 
-      {/* Visual Indicator of Background Security */}
-      <div className="fixed bottom-4 left-4 z-50 pointer-events-none opacity-40 hover:opacity-100 transition-opacity flex items-center gap-2 bg-white/5 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 shadow-lg">
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-        <span className="text-[9px] font-bold text-white/70 uppercase tracking-widest">Score-based Security Active</span>
-      </div>
-
       {/* Data Retention Warning Dialog */}
       <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
         <AlertDialogContent className="bg-white rounded-3xl border-none shadow-2xl max-w-[90vw] w-[400px]">
@@ -389,22 +350,5 @@ function LoginForm() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
-  )
-}
-
-export default function LoginPage() {
-  const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
-
-  return (
-    <GoogleReCaptchaProvider 
-      reCaptchaKey={SITE_KEY} 
-      container={{ 
-        parameters: { 
-          badge: 'bottomright' 
-        } 
-      }}
-    >
-      <LoginForm />
-    </GoogleReCaptchaProvider>
   )
 }
