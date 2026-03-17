@@ -60,7 +60,7 @@ function LoginForm() {
       toast({
         variant: "destructive",
         title: "Security Check Unavailable",
-        description: "Recaptcha has not loaded yet. Please try again in a few seconds.",
+        description: "reCAPTCHA has not loaded yet. Please try again in a few seconds.",
       })
       return
     }
@@ -387,7 +387,14 @@ export default function LoginPage() {
   const SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "6Lf9Jo0sAAAAAKlNGQpU2MgsawgLHniFaEnOJujN"
 
   return (
-    <GoogleReCaptchaProvider reCaptchaKey={SITE_KEY} container={{ parameters: { badge: 'bottomright' } }}>
+    <GoogleReCaptchaProvider 
+      reCaptchaKey={SITE_KEY} 
+      container={{ 
+        parameters: { 
+          badge: 'bottomright' 
+        } 
+      }}
+    >
       <LoginForm />
     </GoogleReCaptchaProvider>
   )
