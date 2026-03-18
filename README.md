@@ -61,15 +61,14 @@ WaterHub is a premium, high-performance hydration tracking application designed 
 
 ## 📤 How to Save to GitHub (New Repository)
 
-If you have deleted your previous repository and want to start fresh with a new one, follow these steps:
+If you have deleted your previous repository and want to start fresh with a new one, follow these steps in your terminal:
 
 1. **Create a new Repository on GitHub:**
-   Go to [github.com/new](https://github.com/new). Name it `waterhub` (or your choice) and click **Create repository**.
+   Go to [github.com/new](https://github.com/new). Name it `waterhub` and click **Create repository**.
 
 2. **Reset and Push your code:**
-   Open your terminal in the project folder and run:
    ```bash
-   # 1. Delete the old git history (starts fresh)
+   # 1. Delete the old git history
    rm -rf .git
 
    # 2. Initialize a new git repository
@@ -84,10 +83,10 @@ If you have deleted your previous repository and want to start fresh with a new 
    # 5. Rename branch to main
    git branch -M main
 
-   # 6. Add the NEW remote repository (Replace YOUR_USERNAME and YOUR_REPO_NAME)
+   # 6. Add the NEW remote repository (Replace with YOUR URL)
    git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
 
-   # 7. Force push to the new empty repository
+   # 7. Push to the new repository
    git push -u origin main
    ```
 
