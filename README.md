@@ -59,5 +59,34 @@ WaterHub is a premium, high-performance hydration tracking application designed 
    npm run genkit:dev
    ```
 
+## 📤 How to Upload to GitHub
+
+To push this code to your own GitHub repository, follow these steps:
+
+1. **Initialize Git:**
+   ```bash
+   git init
+   ```
+
+2. **Add Files:**
+   ```bash
+   git add .
+   ```
+
+3. **Commit Changes:**
+   ```bash
+   git commit -m "Initial commit: WaterHub Smart Hydration Tracker"
+   ```
+
+4. **Create a Repository on GitHub:**
+   Go to [github.com/new](https://github.com/new) and create a new repository.
+
+5. **Link and Push:**
+   ```bash
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   git branch -M main
+   git push -u origin main
+   ```
+
 ---
 Developed by Aniruddha Nag
