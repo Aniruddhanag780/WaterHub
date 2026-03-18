@@ -89,4 +89,4 @@ To push this code to your own GitHub repository, follow these steps:
    ```
 
 ---
-Developed by Aniruddha Nag
+**Developed by Aniruddha Nag**
