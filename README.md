@@ -21,12 +21,12 @@ WaterHub is a premium, high-performance hydration tracking application designed 
 
 ### 🔐 Enterprise-Grade Security
 - **Multi-Provider Auth:** Support for Google, Microsoft, Email/Password, and Guest sessions.
-- **Strict Verification:** Mandatory email verification for all password-based accounts to prevent spam and ensure data integrity.
+- **Strict Verification:** Mandatory email verification for all password-based accounts.
 - **Password Hardness:** Enforces high-entropy passwords (8+ characters, including numbers and symbols).
-- **Data Retention Policy:** Automatic 30-day cleanup of inactive guest or unverified accounts to maintain system performance.
+- **Data Retention Policy:** Automatic 30-day cleanup of inactive guest or unverified accounts to maintain system hygiene.
 
 ### 📊 Comprehensive Activity Tracking
-- **Unified Activity Feed:** Every single action—from adding 150ml of water to silencing an alarm or updating an email—is recorded in a real-time notification hub.
+- **Unified Activity Feed:** Every action—from adding 150ml of water to silencing an alarm or updating an email—is recorded in a real-time notification hub.
 - **Visual Progress:** Elegant SVG progress rings and glass-filling animations provide instant feedback on your daily goal.
 - **Streak Tracker:** Motivational tracking of consecutive days meeting your hydration targets.
 
@@ -59,32 +59,32 @@ WaterHub is a premium, high-performance hydration tracking application designed 
    npm run genkit:dev
    ```
 
-## 📤 How to Upload to GitHub
+## 📤 How to Save to GitHub
 
-To push this code to your own GitHub repository, follow these steps:
+To save your code to a new GitHub repository, follow these steps:
 
-1. **Initialize Git:**
+1. **Create a new Repository on GitHub:**
+   Go to [github.com/new](https://github.com/new). Name it `waterhub` (or your choice) and click **Create repository**.
+
+2. **Initialize and Push your code:**
+   Open your terminal in the project folder and run:
    ```bash
+   # Initialize git
    git init
-   ```
 
-2. **Add Files:**
-   ```bash
+   # Add all files
    git add .
-   ```
 
-3. **Commit Changes:**
-   ```bash
+   # Commit your changes
    git commit -m "Initial commit: WaterHub Smart Hydration Tracker"
-   ```
 
-4. **Create a Repository on GitHub:**
-   Go to [github.com/new](https://github.com/new) and create a new repository.
-
-5. **Link and Push:**
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+   # Rename branch to main
    git branch -M main
+
+   # Add the remote repository (Replace YOUR_USERNAME and YOUR_REPO_NAME)
+   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+
+   # Push the code
    git push -u origin main
    ```
 
