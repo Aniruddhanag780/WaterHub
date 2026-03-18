@@ -59,36 +59,5 @@ WaterHub is a premium, high-performance hydration tracking application designed 
    npm run genkit:dev
    ```
 
-## 📤 How to Save to GitHub (New Repository)
-
-If you have deleted your previous repository and want to start fresh with a new one, follow these steps in your terminal:
-
-1. **Create a new Repository on GitHub:**
-   Go to [github.com/new](https://github.com/new). Name it `waterhub` and click **Create repository**.
-
-2. **Reset and Push your code:**
-   ```bash
-   # 1. Delete the old git history
-   rm -rf .git
-
-   # 2. Initialize a new git repository
-   git init
-
-   # 3. Add all files
-   git add .
-
-   # 4. Commit your changes
-   git commit -m "Initial commit: WaterHub Smart Hydration Tracker"
-
-   # 5. Rename branch to main
-   git branch -M main
-
-   # 6. Add the NEW remote repository (Replace with YOUR URL)
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-
-   # 7. Push to the new repository
-   git push -u origin main
-   ```
-
 ---
 **Developed by Aniruddha Nag**
